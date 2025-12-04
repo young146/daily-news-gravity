@@ -29,7 +29,7 @@ export async function POST(request) {
         
         const result = await publishCardNewsToWordPress(imageBuffer, date, {
             topNewsTitle: topNews?.translatedTitle || topNews?.title,
-            dailyNewsUrl: 'https://chaovietnam.co.kr/category/news/dailynews/'
+            terminalUrl: 'https://chaovietnam.co.kr/daily-news-terminal/'
         });
         
         console.log('[CardNews API] Success:', result);
