@@ -35,6 +35,7 @@ model NewsItem {
   isSentSNS         Boolean  @default(false) // Facebook, Kakao
   wordpressUrl      String?  // URL of the published post on WordPress
   wordpressImageUrl String?  // URL of uploaded image in WordPress media library
+  wordpressMediaId  Int?     // Media ID of uploaded image for featured_media
   
   htmlContent       String?  // Generated HTML for email
   publishedAt       DateTime?

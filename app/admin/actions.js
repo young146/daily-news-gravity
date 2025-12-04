@@ -44,34 +44,46 @@ export async function publishItemAction(id, target) {
             if (result.imageUrl) {
                 data.wordpressImageUrl = result.imageUrl;
             }
+            if (result.mediaId) {
+                data.wordpressMediaId = result.mediaId;
+            }
             data.isPublishedMain = true;
             data.status = 'PUBLISHED';
         } else if (target === 'daily') {
-            // 1. Publish to Main Site FIRST to get the link and image URL
+            // 1. Publish to Main Site FIRST to get the link, image URL, and media ID
             let mainSiteUrl = item.wordpressUrl;
             let uploadedImageUrl = item.wordpressImageUrl;
+            let uploadedMediaId = item.wordpressMediaId;
             
             if (!mainSiteUrl) {
                 try {
                     const result = await publishToMainSite(item);
                     mainSiteUrl = result.postUrl;
                     uploadedImageUrl = result.imageUrl;
+                    uploadedMediaId = result.mediaId;
                 } catch (e) {
                     console.error("Failed to publish to main site, proceeding without link:", e);
                 }
             }
 
-            // 2. Update DB with the link and image URL
+            // 2. Update DB with the link, image URL, and media ID
             if (mainSiteUrl) {
                 data.wordpressUrl = mainSiteUrl;
             }
             if (uploadedImageUrl) {
                 data.wordpressImageUrl = uploadedImageUrl;
             }
+            if (uploadedMediaId) {
+                data.wordpressMediaId = uploadedMediaId;
+            }
 
-            // 3. Publish summary - will reuse wordpressImageUrl if available
-            const itemWithImageUrl = { ...item, wordpressImageUrl: uploadedImageUrl };
-            await publishToDailySite(itemWithImageUrl);
+            // 3. Publish summary - will reuse wordpressImageUrl and wordpressMediaId
+            const itemWithMedia = { 
+                ...item, 
+                wordpressImageUrl: uploadedImageUrl,
+                wordpressMediaId: uploadedMediaId 
+            };
+            await publishToDailySite(itemWithMedia);
             data.isPublishedDaily = true;
             data.publishedAt = new Date();
             data.status = 'PUBLISHED';
