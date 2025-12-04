@@ -63,13 +63,15 @@ Two publication targets on chaovietnam.co.kr:
 
 ## Image Handling
 
-| News Source | Image Upload Status |
-|-------------|---------------------|
-| VnExpress | ✅ Works |
-| InsideVina | ✅ Works |
-| TuoiTre | ✅ Works |
-| ThanhNien | ✅ Works |
-| Yonhap | ❌ SSL error (server issue) |
+| News Source | Image Upload Status | Method |
+|-------------|---------------------|--------|
+| VnExpress | ✅ Works | WordPress plugin |
+| VnExpress VN | ✅ Works | WordPress plugin |
+| InsideVina | ✅ Works | WordPress plugin |
+| TuoiTre | ✅ Works | WordPress plugin |
+| ThanhNien | ✅ Works | WordPress plugin |
+| VNA | ✅ Works | WordPress plugin |
+| Yonhap | ✅ Works | Replit → WordPress (SSL bypass) |
 
 ## Environment Variables
 
@@ -88,9 +90,11 @@ Two publication targets on chaovietnam.co.kr:
 - Summary posts have Featured Image set for Jenny plugin
 - Added `full_article_url` custom field for direct article linking
 - Jenny plugin v1.1: Cards link directly to full article
+- **Yonhap SSL fix**: Images downloaded via Replit first, then uploaded to WordPress
+- **VNA crawler fix**: SSL legacy support enabled
 
 ## Notes
 
-- Yonhap images fail due to SSL negotiation issue on WordPress server
+- All 7 news sources now working with images
 - Existing summary posts (before Dec 4) still link to summary pages
 - New summary posts link directly to full articles
