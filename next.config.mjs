@@ -27,6 +27,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images2.thanhnien.vn' },
     ],
   },
+  allowedDevOrigins: ['*'],
   experimental: {
     serverActions: {
       allowedOrigins: ['*'],
