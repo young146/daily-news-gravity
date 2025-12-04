@@ -117,23 +117,34 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
         setPublishResult(null);
         
         try {
-            const response = await fetch('/api/generate-daily-content', {
+            const canvas = await generateCanvas();
+            if (!canvas) {
+                throw new Error('이미지 생성에 실패했습니다');
+            }
+            
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            if (!blob) {
+                throw new Error('이미지 변환에 실패했습니다');
+            }
+            
+            const formData = new FormData();
+            formData.append('image', blob, 'card-news.png');
+            
+            const response = await fetch('/api/publish-card-news', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ publishToWordPress: true })
+                body: formData
             });
             
             const result = await response.json();
             
-            if (result.success && result.wordpress) {
+            if (result.success) {
                 setPublishResult({
                     success: true,
-                    postUrl: result.wordpress.postUrl,
-                    imageUrl: result.wordpress.imageUrl
+                    postUrl: result.postUrl,
+                    imageUrl: result.imageUrl
                 });
                 alert('WordPress에 카드 엽서가 게시되었습니다!');
-            } else if (result.success) {
-                setPublishResult({ success: true, message: '이미지는 생성되었지만 WordPress 게시에 실패했습니다.' });
             } else {
                 throw new Error(result.error || 'Unknown error');
             }
