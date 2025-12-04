@@ -141,10 +141,10 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
             if (result.success) {
                 setPublishResult({
                     success: true,
-                    postUrl: result.postUrl,
+                    terminalUrl: result.terminalUrl,
                     imageUrl: result.imageUrl
                 });
-                alert('WordPress에 카드 엽서가 게시되었습니다!');
+                alert('뉴스 터미널 대표이미지가 업데이트되었습니다!');
             } else {
                 throw new Error(result.error || 'Unknown error');
             }
@@ -386,10 +386,10 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                         <div className={`p-4 rounded-lg text-sm ${publishResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {publishResult.success ? (
                                 <div className="flex flex-col gap-2">
-                                    <span>✅ 게시 완료!</span>
-                                    {publishResult.postUrl && (
-                                        <a href={publishResult.postUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold">
-                                            게시물 보기 →
+                                    <span>✅ 뉴스 터미널 대표이미지 업데이트 완료!</span>
+                                    {publishResult.terminalUrl && (
+                                        <a href={publishResult.terminalUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold">
+                                            뉴스 터미널 보기 →
                                         </a>
                                     )}
                                 </div>
