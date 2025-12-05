@@ -10,9 +10,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Register custom meta field for REST API
+// Register custom meta fields for REST API
 add_action( 'init', function() {
     register_post_meta( 'post', 'full_article_url', array(
+        'show_in_rest' => true,
+        'single' => true,
+        'type' => 'string',
+        'auth_callback' => function() {
+            return current_user_can( 'edit_posts' );
+        }
+    ));
+    
+    register_post_meta( 'post', 'news_category', array(
         'show_in_rest' => true,
         'single' => true,
         'type' => 'string',
@@ -53,8 +62,22 @@ function jenny_daily_news_shortcode( $atts ) {
             $thumb_url = 'https://via.placeholder.com/600x400?text=Xin+Chao';
         }
 
-        $categories = get_the_category();
-        $cat_name = ! empty( $categories ) ? $categories[0]->name : 'News';
+        // Get news category from custom field first, fallback to WordPress category
+        $news_category = get_post_meta( get_the_ID(), 'news_category', true );
+        if ( ! empty( $news_category ) ) {
+            // Translate category names to Korean
+            $category_map = array(
+                'Society' => '사회',
+                'Economy' => '경제',
+                'Culture' => '문화',
+                'Policy' => '정책',
+                'Korea-Vietnam' => '한-베',
+            );
+            $cat_name = isset( $category_map[ $news_category ] ) ? $category_map[ $news_category ] : $news_category;
+        } else {
+            $categories = get_the_category();
+            $cat_name = ! empty( $categories ) ? $categories[0]->name : '뉴스';
+        }
         
         $excerpt = get_the_excerpt();
         if ( empty( $excerpt ) ) {
