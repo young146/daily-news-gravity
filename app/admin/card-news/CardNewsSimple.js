@@ -67,30 +67,33 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
             >
                 <div style={{ 
                     backgroundColor: '#8B0000',
-                    color: 'white', 
-                    fontSize: '36px', 
-                    fontWeight: 'normal',
-                    padding: '12px 40px',
+                    color: '#ffffff', 
+                    fontSize: '54px', 
+                    fontWeight: 'bold',
+                    padding: '18px 60px',
                     borderRadius: '50px',
-                    marginBottom: '40px'
+                    marginBottom: '50px',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                 }}>
                     {dateStr}
                 </div>
                 <h1 style={{ 
-                    color: 'white', 
-                    fontSize: '80px', 
+                    color: '#ffffff', 
+                    fontSize: '90px', 
                     fontWeight: 'bold',
                     margin: 0,
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    textShadow: '0 4px 8px rgba(0,0,0,0.5)'
                 }}>
                     씬짜오 오늘의 뉴스
                 </h1>
                 <p style={{ 
-                    color: 'white', 
-                    fontSize: '80px', 
+                    color: '#ffffff', 
+                    fontSize: '70px', 
                     marginTop: '30px',
                     textAlign: 'center',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    textShadow: '0 4px 8px rgba(0,0,0,0.5)'
                 }}>
                     XinChao Today's News
                 </p>
