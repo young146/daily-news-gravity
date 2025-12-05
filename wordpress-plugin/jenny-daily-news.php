@@ -198,6 +198,7 @@ function jenny_daily_news_shortcode( $atts ) {
     $output .= '<div class="jenny-card-header">';
     $output .= '<span class="jenny-card-icon">💱</span>';
     $output .= '<span class="jenny-card-title">환율</span>';
+    $output .= '<span class="jenny-card-source">(ExchangeRate-API)</span>';
     $output .= '</div>';
     $output .= '<div class="jenny-card-chips">';
     $output .= '<div class="jenny-fx-chip">';
@@ -395,6 +396,12 @@ function jenny_get_styles() {
             font-size: 13px;
             font-weight: 700;
             color: #059669;
+        }
+        .jenny-card-source {
+            font-size: 9px;
+            color: #9ca3af;
+            font-weight: 400;
+            margin-left: 4px;
         }
         .jenny-filter-buttons {
             display: flex;
