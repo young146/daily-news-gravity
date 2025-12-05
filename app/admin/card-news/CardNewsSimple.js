@@ -9,7 +9,7 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
     const [publishResult, setPublishResult] = useState(null);
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
-    const generateCanvas = async () => {
+    const generateImage = async () => {
         if (!cardRef.current) return null;
         window.scrollTo(0, 0);
         
@@ -28,12 +28,8 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
             await document.fonts.ready;
         }
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Disable font ligatures to prevent character corruption
-        const originalFontFeature = cardRef.current.style.fontFeatureSettings;
-        cardRef.current.style.fontFeatureSettings = '"liga" 0, "clig" 0';
 
-        const html2canvas = (await import('html2canvas')).default;
+        // Proxy external images first
         const images = cardRef.current.querySelectorAll('img');
         const originalSrcs = [];
 
@@ -51,52 +47,38 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
             }
         }));
 
-        const canvas = await html2canvas(cardRef.current, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#0f172a',
-            logging: false,
-            scrollY: 0,
-            windowWidth: 1200,
-            windowHeight: 630,
-            imageTimeout: 15000,
-            onclone: (clonedDoc) => {
-                // Force Noto Sans KR font and disable ligatures in cloned document
-                const style = clonedDoc.createElement('style');
-                style.textContent = `
-                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=block');
-                    * { 
-                        font-family: "Noto Sans KR", sans-serif !important;
-                        font-feature-settings: "liga" 0, "clig" 0 !important;
-                        -webkit-font-feature-settings: "liga" 0, "clig" 0 !important;
-                    }
-                `;
-                clonedDoc.head.appendChild(style);
+        // Use dom-to-image-more for better Korean font support
+        const domtoimage = (await import('dom-to-image-more')).default;
+        
+        const dataUrl = await domtoimage.toJpeg(cardRef.current, {
+            quality: 0.92,
+            width: 1200,
+            height: 630,
+            style: {
+                transform: 'scale(1)',
+                transformOrigin: 'top left'
             }
         });
 
-        // Restore original font settings
-        cardRef.current.style.fontFeatureSettings = originalFontFeature;
-
+        // Restore original image sources
         images.forEach((img, i) => {
             if (originalSrcs[i]) {
                 URL.revokeObjectURL(img.src);
                 img.src = originalSrcs[i];
             }
         });
-        return canvas;
+        
+        return dataUrl;
     };
 
     const handleDownloadImage = async () => {
         setIsGenerating(true);
         try {
-            const canvas = await generateCanvas();
-            if (canvas) {
-                const image = canvas.toDataURL('image/png');
+            const dataUrl = await generateImage();
+            if (dataUrl) {
                 const link = document.createElement('a');
-                link.href = image;
-                link.download = `xinchao-news-${new Date().toISOString().split('T')[0]}.png`;
+                link.href = dataUrl;
+                link.download = `xinchao-news-${new Date().toISOString().split('T')[0]}.jpg`;
                 link.click();
             }
         } catch (error) {
@@ -112,12 +94,14 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
         setPublishResult(null);
         
         try {
-            const canvas = await generateCanvas();
-            if (!canvas) {
+            const dataUrl = await generateImage();
+            if (!dataUrl) {
                 throw new Error('이미지 생성에 실패했습니다');
             }
             
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+            // Convert data URL to blob
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
             
             if (!blob) {
                 throw new Error('이미지 변환에 실패했습니다');
@@ -126,12 +110,12 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
             const formData = new FormData();
             formData.append('image', blob, 'card-news.jpg');
             
-            const response = await fetch('/api/publish-card-news', {
+            const apiResponse = await fetch('/api/publish-card-news', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await response.json();
+            const result = await apiResponse.json();
             
             if (result.success) {
                 setPublishResult({
