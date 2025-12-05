@@ -126,14 +126,25 @@ Single publication target on chaovietnam.co.kr:
 
 ## Recent Changes (Dec 5, 2025)
 
-- **카드 엽서 새 디자인**: Simple Hero 스타일 (1200×800)
+### Bug Fixes & Stability Improvements
+- **번역 함수 오류 수정**: `translateItemAction`에서 함수 호출 시그니처 수정
+  - 기존: `translateNewsItem(item)` → 수정: `translateNewsItem(title, summary, content)`
+- **카드뉴스 배포 호환성**: localhost URL 하드코딩 제거
+  - 환경변수 기반 URL 설정으로 변경 (REPLIT_DEV_DOMAIN, NEXT_PUBLIC_BASE_URL)
+- **크롤러 안정성 개선**: `Promise.all` → `Promise.allSettled`
+  - 개별 소스 실패 시에도 다른 소스 크롤링 계속
+  - 실패/성공 소스 로그에 상세 기록
+  - 상태 표시: SUCCESS | PARTIAL | FAILED
+
+### Earlier (Dec 5)
+- **카드 엽서 새 디자인**: Simple Hero 스타일 (1200×630)
   - TopNews 1개만 크게 표시, SNS 썸네일에서도 제목이 잘 보임
   - 4개 카드 그리드 제거 → 단일 히어로 레이아웃
 - **설정 페이지 개선**: 오늘 발행된 뉴스 관리 섹션 추가
 - **버튼 깜빡임 수정**: Translate & Generate 버튼 애니메이션 제거
 - **뉴스 삭제 기능**: 각 뉴스 항목에 🗑️ 삭제 버튼 추가
 - **요약본 게시 제거**: 본문만 WordPress에 게시 (카테고리 31)
-- **Jenny 플러그인 v1.3**: 본문(31)에서 직접 가져오고, excerpt 사용, permalink로 링크
+- **Jenny 플러그인 v1.5**: 날씨(3도시) + 환율 위젯 추가
 
 ### Dec 4, 2025
 - **Yonhap SSL fix**: Images downloaded via Replit first, then uploaded to WordPress
