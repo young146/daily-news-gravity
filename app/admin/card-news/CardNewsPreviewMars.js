@@ -144,7 +144,6 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                     terminalUrl: result.terminalUrl,
                     imageUrl: result.imageUrl
                 });
-                alert('뉴스 터미널 대표이미지가 업데이트되었습니다!');
             } else {
                 throw new Error(result.error || 'Unknown error');
             }
@@ -383,34 +382,45 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                     </div>
                     
                     {publishResult && (
-                        <div className={`p-4 rounded-lg text-sm ${publishResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        <div className={`p-6 rounded-xl text-sm shadow-lg ${publishResult.success ? 'bg-green-50 border-2 border-green-400' : 'bg-red-100 text-red-800'}`}>
                             {publishResult.success ? (
-                                <div className="flex flex-col gap-3">
-                                    <span className="text-lg font-bold">✅ 뉴스 터미널 대표이미지 업데이트 완료!</span>
+                                <div className="flex flex-col gap-4">
+                                    <div className="text-center">
+                                        <span className="text-2xl">🎉</span>
+                                        <p className="text-xl font-bold text-green-700 mt-2">뉴스 터미널 대표이미지 업데이트 완료!</p>
+                                    </div>
                                     
-                                    <div className="bg-white p-4 rounded-lg border border-green-300">
-                                        <p className="text-xs text-gray-500 mb-2">SNS 공유용 URL (클릭하여 복사)</p>
+                                    <div className="bg-white p-5 rounded-xl border-2 border-blue-300 shadow-inner">
+                                        <p className="text-center text-gray-700 font-bold mb-3">
+                                            📮 최종적으로 이 URL을 복사하여 보내시면 됩니다
+                                        </p>
                                         
                                         <div 
                                             onClick={() => {
                                                 const dateParam = `${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
                                                 const shareUrl = `https://chaovietnam.co.kr/daily-news-terminal/?v=${dateParam}`;
                                                 navigator.clipboard.writeText(shareUrl);
-                                                alert('URL이 복사되었습니다!');
+                                                const btn = document.getElementById('copy-success-msg');
+                                                if (btn) {
+                                                    btn.textContent = '✅ 복사됨!';
+                                                    setTimeout(() => { btn.textContent = '📋 클릭하여 복사'; }, 2000);
+                                                }
                                             }}
-                                            className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                                            className="flex items-center gap-3 p-4 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors border border-blue-300"
                                         >
-                                            <span className="text-blue-600 font-mono text-sm flex-1 break-all">
+                                            <span className="text-blue-700 font-mono text-base flex-1 break-all font-bold">
                                                 https://chaovietnam.co.kr/daily-news-terminal/?v={`${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`}
                                             </span>
-                                            <span className="text-xl">📋</span>
+                                            <span id="copy-success-msg" className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold whitespace-nowrap">
+                                                📋 클릭하여 복사
+                                            </span>
                                         </div>
                                         
-                                        <p className="text-xs text-gray-400 mt-2">Facebook, 카카오톡, Zalo 모두 이 URL 사용</p>
+                                        <p className="text-xs text-gray-500 mt-3 text-center">Facebook, 카카오톡, Zalo 모두 이 URL 사용</p>
                                     </div>
                                     
-                                    <a href={publishResult.terminalUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-center">
-                                        뉴스 터미널 미리보기 →
+                                    <a href={publishResult.terminalUrl} target="_blank" rel="noopener noreferrer" className="text-center text-blue-600 underline font-bold hover:text-blue-800">
+                                        🔗 뉴스 터미널 미리보기 →
                                     </a>
                                 </div>
                             ) : (
