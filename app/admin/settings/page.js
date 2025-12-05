@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -9,11 +9,24 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [publishedNews, setPublishedNews] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
+  const [crawlerLogs, setCrawlerLogs] = useState([]);
+  const [expandedLog, setExpandedLog] = useState(null);
 
   useEffect(() => {
     fetchSystemInfo();
     fetchPublishedNews();
+    fetchCrawlerLogs();
   }, []);
+
+  const fetchCrawlerLogs = async () => {
+    try {
+      const res = await fetch('/api/crawler-logs');
+      const data = await res.json();
+      setCrawlerLogs(data.logs || []);
+    } catch (error) {
+      console.error('Failed to fetch crawler logs:', error);
+    }
+  };
 
   const fetchPublishedNews = async () => {
     try {
@@ -131,6 +144,145 @@ export default function SettingsPage() {
           ← 대시보드로
         </Link>
       </div>
+
+      {/* 크롤러 로그 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>
+            📊 크롤러 실행 로그
+          </h2>
+          <button 
+            onClick={fetchCrawlerLogs}
+            style={{
+              padding: '6px 12px',
+              background: '#f3f4f6',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            새로고침
+          </button>
+        </div>
+        <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+          최근 20개 크롤링 실행 기록입니다. 실패한 소스의 상세 에러를 확인할 수 있습니다.
+        </p>
+        
+        {crawlerLogs.length === 0 ? (
+          <p style={{ color: '#9ca3af', textAlign: 'center', padding: '20px' }}>
+            크롤러 로그가 없습니다.
+          </p>
+        ) : (
+          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>실행 시간</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '100px' }}>상태</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '80px' }}>저장</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>요약</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crawlerLogs.map(log => {
+                  const hasErrors = log.errorDetails && log.errorDetails !== 'null';
+                  const errors = hasErrors ? JSON.parse(log.errorDetails) : null;
+                  const isExpanded = expandedLog === log.id;
+                  
+                  return (
+                    <React.Fragment key={log.id}>
+                      <tr 
+                        style={{ 
+                          borderBottom: '1px solid #f3f4f6',
+                          cursor: hasErrors ? 'pointer' : 'default',
+                          background: isExpanded ? '#fef3c7' : 'transparent'
+                        }}
+                        onClick={() => hasErrors && setExpandedLog(isExpanded ? null : log.id)}
+                      >
+                        <td style={{ padding: '10px' }}>
+                          {new Date(log.runAt).toLocaleString('ko-KR', {
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                          })}
+                        </td>
+                        <td style={{ padding: '10px', textAlign: 'center' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            background: log.status === 'SUCCESS' ? '#dcfce7' : 
+                                       log.status === 'PARTIAL' ? '#fef3c7' : '#fee2e2',
+                            color: log.status === 'SUCCESS' ? '#166534' : 
+                                   log.status === 'PARTIAL' ? '#92400e' : '#991b1b'
+                          }}>
+                            {log.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px', textAlign: 'center', fontWeight: '600', color: '#1f2937' }}>
+                          {log.itemsFound}개
+                        </td>
+                        <td style={{ padding: '10px', color: '#6b7280', fontSize: '13px' }}>
+                          {log.message?.substring(0, 80)}
+                          {log.message?.length > 80 && '...'}
+                          {hasErrors && (
+                            <span style={{ marginLeft: '8px', color: '#ef4444' }}>
+                              {isExpanded ? '▼ 에러 닫기' : '▶ 에러 보기'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                      {isExpanded && errors && (
+                        <tr>
+                          <td colSpan={4} style={{ padding: '0' }}>
+                            <div style={{ 
+                              background: '#1f2937', 
+                              padding: '16px', 
+                              margin: '0 10px 10px 10px',
+                              borderRadius: '8px'
+                            }}>
+                              {Object.entries(errors).map(([source, err]) => (
+                                <div key={source} style={{ marginBottom: '12px' }}>
+                                  <div style={{ color: '#f87171', fontWeight: '600', marginBottom: '4px' }}>
+                                    ❌ {source}
+                                  </div>
+                                  <div style={{ color: '#fbbf24', fontSize: '13px', marginBottom: '4px' }}>
+                                    {err.message}
+                                  </div>
+                                  {err.stack && (
+                                    <pre style={{ 
+                                      color: '#9ca3af', 
+                                      fontSize: '11px', 
+                                      margin: 0,
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-all'
+                                    }}>
+                                      {err.stack}
+                                    </pre>
+                                  )}
+                                  <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px' }}>
+                                    {new Date(err.time).toLocaleString('ko-KR')}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* 소스별 크롤링 */}
       <section style={{ 

@@ -45,11 +45,12 @@ model NewsItem {
 }
 
 model CrawlerLog {
-  id          Int      @id @default(autoincrement())
-  runAt       DateTime @default(now())
-  status      String   // SUCCESS, FAILED
-  itemsFound  Int      @default(0)
-  message     String?
+  id           Int      @id @default(autoincrement())
+  runAt        DateTime @default(now())
+  status       String   // SUCCESS, PARTIAL, FAILED
+  itemsFound   Int      @default(0)
+  message      String?
+  errorDetails String?  // JSON string with detailed error info per source
 }
 
 model User {

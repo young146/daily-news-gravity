@@ -27,6 +27,7 @@ async function main() {
   const allItems = [];
   const successSources = [];
   const failedSources = [];
+  const errorDetails = {};
 
   results.forEach((result, index) => {
     const crawler = crawlers[index];
@@ -35,8 +36,15 @@ async function main() {
       successSources.push(`${crawler.name}(${result.value.length})`);
       console.log(`✅ ${crawler.name}: ${result.value.length} items`);
     } else {
+      const errorMsg = result.reason?.message || String(result.reason);
+      const errorStack = result.reason?.stack || '';
       failedSources.push(crawler.name);
-      console.error(`❌ ${crawler.name} failed:`, result.reason?.message || result.reason);
+      errorDetails[crawler.name] = {
+        message: errorMsg,
+        stack: errorStack.split('\n').slice(0, 5).join('\n'), // First 5 lines of stack
+        time: new Date().toISOString()
+      };
+      console.error(`❌ ${crawler.name} failed:`, errorMsg);
     }
   });
 
@@ -74,7 +82,8 @@ async function main() {
     data: {
       status,
       itemsFound: savedCount,
-      message: `Run completed. Success: ${successSources.join(', ') || 'none'}. Failed: ${failedSources.join(', ') || 'none'}`
+      message: `Run completed. Success: ${successSources.join(', ') || 'none'}. Failed: ${failedSources.join(', ') || 'none'}`,
+      errorDetails: Object.keys(errorDetails).length > 0 ? JSON.stringify(errorDetails, null, 2) : null
     }
   });
 
