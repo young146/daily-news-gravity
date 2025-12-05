@@ -4,14 +4,12 @@
  * Description: Displays daily news in a beautiful card layout using the shortcode [daily_news_list]. Shows excerpt and links to full article.
  * Version: 1.4
  * Author: Jenny (Antigravity)
- * Requires PHP: 5.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Register custom meta fields for REST API (only if function exists - WP 4.9.8+)
 function jenny_register_meta_fields() {
     if ( function_exists( 'register_post_meta' ) ) {
         register_post_meta( 'post', 'news_category', array(
@@ -29,20 +27,21 @@ function jenny_daily_news_shortcode( $atts ) {
         'category' => 31,
     ), $atts );
 
-    // Check for date filter from URL parameter
-    $selected_date = isset( $_GET['news_date'] ) ? sanitize_text_field( $_GET['news_date'] ) : '';
-    $is_filtered = ! empty( $selected_date );
+    $selected_date = '';
+    if ( isset( $_GET['news_date'] ) ) {
+        $selected_date = sanitize_text_field( $_GET['news_date'] );
+    }
+    $is_filtered = ( $selected_date !== '' );
 
     $args = array(
         'post_type' => 'post',
-        'posts_per_page' => $is_filtered ? 50 : $atts['count'],
-        'cat' => $atts['category'],
+        'posts_per_page' => $is_filtered ? 50 : intval( $atts['count'] ),
+        'cat' => intval( $atts['category'] ),
         'post_status' => 'publish',
         'orderby' => 'date',
         'order' => 'DESC',
     );
 
-    // Add date filter if specified
     if ( $is_filtered ) {
         $date_parts = explode( '-', $selected_date );
         if ( count( $date_parts ) === 3 ) {
@@ -58,11 +57,10 @@ function jenny_daily_news_shortcode( $atts ) {
 
     $query = new WP_Query( $args );
 
-    // Get available dates for the date picker
     $date_args = array(
         'post_type' => 'post',
         'posts_per_page' => 100,
-        'cat' => $atts['category'],
+        'cat' => intval( $atts['category'] ),
         'post_status' => 'publish',
         'orderby' => 'date',
         'order' => 'DESC',
@@ -78,42 +76,48 @@ function jenny_daily_news_shortcode( $atts ) {
     }
     wp_reset_postdata();
 
-    // Build date picker output
-    $current_url = strtok( $_SERVER['REQUEST_URI'], '?' );
+    $page_url = get_permalink();
     
     $output = '<div class="jenny-date-filter">';
     $output .= '<div class="jenny-filter-row">';
     
-    // Today's news button (default view)
-    $today_active = ! $is_filtered ? ' active' : '';
-    $output .= '<a href="' . esc_url( $current_url ) . '" class="jenny-filter-btn' . $today_active . '">오늘의 뉴스</a>';
+    if ( $is_filtered ) {
+        $output .= '<a href="' . esc_url( $page_url ) . '" class="jenny-filter-btn">오늘의 뉴스</a>';
+    } else {
+        $output .= '<span class="jenny-filter-btn active">오늘의 뉴스</span>';
+    }
     
-    // Archive button with date picker
     $output .= '<div class="jenny-archive-wrapper">';
-    $output .= '<button type="button" class="jenny-filter-btn jenny-archive-btn' . ( $is_filtered ? ' active' : '' ) . '">지난 뉴스 보기 ▼</button>';
+    if ( $is_filtered ) {
+        $output .= '<span class="jenny-filter-btn jenny-archive-btn active">지난 뉴스 보기 ▼</span>';
+    } else {
+        $output .= '<span class="jenny-filter-btn jenny-archive-btn">지난 뉴스 보기 ▼</span>';
+    }
     $output .= '<div class="jenny-date-dropdown">';
     
     foreach ( $available_dates as $date ) {
-        $date_display = date_i18n( 'Y년 m월 d일', strtotime( $date ) );
-        $date_active = ( $selected_date === $date ) ? ' selected' : '';
-        $output .= '<a href="' . esc_url( $current_url . '?news_date=' . $date ) . '" class="jenny-date-option' . $date_active . '">' . esc_html( $date_display ) . '</a>';
+        $date_obj = new DateTime( $date );
+        $date_display = $date_obj->format( 'Y' ) . '년 ' . $date_obj->format( 'm' ) . '월 ' . $date_obj->format( 'd' ) . '일';
+        $date_class = ( $selected_date === $date ) ? ' selected' : '';
+        $output .= '<a href="' . esc_url( add_query_arg( 'news_date', $date, $page_url ) ) . '" class="jenny-date-option' . $date_class . '">' . esc_html( $date_display ) . '</a>';
     }
     
-    $output .= '</div>'; // .jenny-date-dropdown
-    $output .= '</div>'; // .jenny-archive-wrapper
-    $output .= '</div>'; // .jenny-filter-row
+    $output .= '</div>';
+    $output .= '</div>';
+    $output .= '</div>';
     
-    // Show current filter info
     if ( $is_filtered ) {
-        $display_date = date_i18n( 'Y년 m월 d일', strtotime( $selected_date ) );
-        $output .= '<div class="jenny-filter-info">' . esc_html( $display_date ) . ' 뉴스를 보고 있습니다. <a href="' . esc_url( $current_url ) . '">오늘의 뉴스로 돌아가기</a></div>';
+        $sel_date_obj = new DateTime( $selected_date );
+        $display_date = $sel_date_obj->format( 'Y' ) . '년 ' . $sel_date_obj->format( 'm' ) . '월 ' . $sel_date_obj->format( 'd' ) . '일';
+        $output .= '<div class="jenny-filter-info">' . esc_html( $display_date ) . ' 뉴스를 보고 있습니다. <a href="' . esc_url( $page_url ) . '">오늘의 뉴스로 돌아가기</a></div>';
     }
     
-    $output .= '</div>'; // .jenny-date-filter
+    $output .= '</div>';
 
     if ( ! $query->have_posts() ) {
         $output .= '<p style="text-align:center; padding: 40px 20px; color: #6b7280;">선택한 날짜에 등록된 뉴스가 없습니다.</p>';
-        return $output . jenny_get_styles();
+        $output .= jenny_get_styles();
+        return $output;
     }
 
     $output .= '<div class="jenny-news-grid">';
@@ -126,10 +130,8 @@ function jenny_daily_news_shortcode( $atts ) {
             $thumb_url = 'https://via.placeholder.com/600x400?text=Xin+Chao';
         }
 
-        // Get news category from custom field first, fallback to WordPress category
         $news_category = get_post_meta( get_the_ID(), 'news_category', true );
         if ( ! empty( $news_category ) ) {
-            // Translate category names to Korean
             $category_map = array(
                 'Society' => '사회',
                 'Economy' => '경제',
@@ -148,24 +150,22 @@ function jenny_daily_news_shortcode( $atts ) {
             $excerpt = wp_trim_words( get_the_content(), 20 );
         }
 
-        // Link directly to the article
         $link_url = get_permalink();
 
-        $output .= '
-        <div class="jenny-news-card">
-            <div class="jenny-card-image">
-                <a href="' . esc_url( $link_url ) . '">
-                    <img src="' . esc_url( $thumb_url ) . '" alt="' . esc_attr( get_the_title() ) . '">
-                </a>
-                <span class="jenny-badge">' . esc_html( $cat_name ) . '</span>
-            </div>
-            <div class="jenny-content">
-                <div class="jenny-date">' . get_the_date( 'Y.m.d H:i' ) . '</div>
-                <h3 class="jenny-title"><a href="' . esc_url( $link_url ) . '">' . get_the_title() . '</a></h3>
-                <div class="jenny-excerpt">' . $excerpt . '</div>
-                <a href="' . esc_url( $link_url ) . '" class="jenny-link">자세히 보기 →</a>
-            </div>
-        </div>';
+        $output .= '<div class="jenny-news-card">';
+        $output .= '<div class="jenny-card-image">';
+        $output .= '<a href="' . esc_url( $link_url ) . '">';
+        $output .= '<img src="' . esc_url( $thumb_url ) . '" alt="' . esc_attr( get_the_title() ) . '">';
+        $output .= '</a>';
+        $output .= '<span class="jenny-badge">' . esc_html( $cat_name ) . '</span>';
+        $output .= '</div>';
+        $output .= '<div class="jenny-content">';
+        $output .= '<div class="jenny-date">' . get_the_date( 'Y.m.d H:i' ) . '</div>';
+        $output .= '<h3 class="jenny-title"><a href="' . esc_url( $link_url ) . '">' . get_the_title() . '</a></h3>';
+        $output .= '<div class="jenny-excerpt">' . $excerpt . '</div>';
+        $output .= '<a href="' . esc_url( $link_url ) . '" class="jenny-link">자세히 보기 →</a>';
+        $output .= '</div>';
+        $output .= '</div>';
     }
 
     $output .= '</div>';
@@ -179,8 +179,7 @@ function jenny_daily_news_shortcode( $atts ) {
 add_shortcode( 'daily_news_list', 'jenny_daily_news_shortcode' );
 
 function jenny_get_styles() {
-    return '
-    <style>
+    return '<style>
         .jenny-date-filter {
             margin-bottom: 24px;
             padding: 16px 0;
@@ -202,7 +201,6 @@ function jenny_get_styles() {
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
         }
         .jenny-filter-btn:hover {
             background: #e5e7eb;
@@ -229,8 +227,7 @@ function jenny_get_styles() {
             max-height: 300px;
             overflow-y: auto;
         }
-        .jenny-archive-wrapper:hover .jenny-date-dropdown,
-        .jenny-archive-wrapper:focus-within .jenny-date-dropdown {
+        .jenny-archive-wrapper:hover .jenny-date-dropdown {
             display: block;
         }
         .jenny-date-option {
@@ -240,7 +237,6 @@ function jenny_get_styles() {
             text-decoration: none;
             font-size: 14px;
             border-bottom: 1px solid #f3f4f6;
-            transition: background 0.2s;
         }
         .jenny-date-option:hover {
             background: #f3f4f6;
@@ -273,13 +269,10 @@ function jenny_get_styles() {
         }
         .jenny-news-card {
             background: #ffffff;
-            border-radius: 0;
             overflow: hidden;
-            box-shadow: none;
             border: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
-            transition: border-color 0.3s ease;
         }
         .jenny-news-card:hover {
             border-color: #9ca3af;
@@ -296,10 +289,6 @@ function jenny_get_styles() {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        .jenny-news-card:hover .jenny-card-image img {
-            transform: scale(1.05);
         }
         .jenny-badge {
             position: absolute;
@@ -308,10 +297,8 @@ function jenny_get_styles() {
             background: #ffffff;
             color: #ea580c;
             padding: 4px 12px;
-            border-radius: 0;
             font-size: 12px;
             font-weight: 700;
-            box-shadow: none;
             border: 1px solid #e5e7eb;
             z-index: 10;
         }
@@ -333,10 +320,6 @@ function jenny_get_styles() {
             color: #111827;
             margin: 0 0 12px 0;
             line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
         .jenny-title a {
             color: inherit;
@@ -354,31 +337,10 @@ function jenny_get_styles() {
             font-weight: 600;
             color: #4b5563;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
             margin-top: auto;
-            transition: color 0.2s;
         }
         .jenny-link:hover {
             color: #ea580c;
         }
-        @media (max-width: 640px) {
-            .jenny-filter-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .jenny-filter-btn {
-                text-align: center;
-            }
-            .jenny-date-dropdown {
-                position: fixed;
-                left: 16px;
-                right: 16px;
-                top: 50%;
-                transform: translateY(-50%);
-                max-height: 60vh;
-            }
-        }
-    </style>
-    ';
+    </style>';
 }
