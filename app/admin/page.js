@@ -122,6 +122,9 @@ export default async function AdminPage() {
                 <h1 className="text-2xl font-bold">Admin Dashboard</h1>
                 <div className="flex gap-2">
                     <CrawlNewsButton />
+                    <Link href="/admin/card-news" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition flex items-center gap-2">
+                        📮 전령카드 확인하기
+                    </Link>
                     <form action={resetAllNews}>
                         <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition flex items-center gap-2" title="Delete ALL news items">
                             ⚠️ Hard Reset (Delete All)
