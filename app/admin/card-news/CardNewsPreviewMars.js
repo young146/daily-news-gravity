@@ -381,17 +381,18 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                         </button>
                     </div>
                     
-                    {publishResult && (
-                        <div className={`p-6 rounded-xl text-sm shadow-lg ${publishResult.success ? 'bg-green-50 border-2 border-green-400' : 'bg-red-100 text-red-800'}`}>
-                            {publishResult.success ? (
-                                <div className="flex flex-col gap-4">
+                    {publishResult && publishResult.success && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-lg mx-4">
+                                <div className="flex flex-col gap-5">
                                     <div className="text-center">
-                                        <span className="text-2xl">🎉</span>
-                                        <p className="text-xl font-bold text-green-700 mt-2">뉴스 터미널 대표이미지 업데이트 완료!</p>
+                                        <span className="text-4xl">🎉</span>
+                                        <p className="text-2xl font-bold text-green-700 mt-3">게시 완료!</p>
+                                        <p className="text-gray-500 mt-1">뉴스 터미널 대표이미지가 업데이트되었습니다</p>
                                     </div>
                                     
-                                    <div className="bg-white p-5 rounded-xl border-2 border-blue-300 shadow-inner">
-                                        <p className="text-center text-gray-700 font-bold mb-3">
+                                    <div className="bg-blue-50 p-5 rounded-xl border-2 border-blue-300">
+                                        <p className="text-center text-gray-800 font-bold mb-4 text-lg">
                                             📮 최종적으로 이 URL을 복사하여 보내시면 됩니다
                                         </p>
                                         
@@ -406,12 +407,12 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                                                     setTimeout(() => { btn.textContent = '📋 클릭하여 복사'; }, 2000);
                                                 }
                                             }}
-                                            className="flex items-center gap-3 p-4 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors border border-blue-300"
+                                            className="flex items-center gap-3 p-4 bg-white rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border-2 border-blue-400"
                                         >
-                                            <span className="text-blue-700 font-mono text-base flex-1 break-all font-bold">
+                                            <span className="text-blue-700 font-mono text-sm flex-1 break-all font-bold">
                                                 https://chaovietnam.co.kr/daily-news-terminal/?v={`${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`}
                                             </span>
-                                            <span id="copy-success-msg" className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold whitespace-nowrap">
+                                            <span id="copy-success-msg" className="text-sm bg-blue-600 text-white px-3 py-2 rounded-lg font-bold whitespace-nowrap">
                                                 📋 클릭하여 복사
                                             </span>
                                         </div>
@@ -419,13 +420,26 @@ export default function CardNewsPreviewMars({ data, mode = 'preview' }) {
                                         <p className="text-xs text-gray-500 mt-3 text-center">Facebook, 카카오톡, Zalo 모두 이 URL 사용</p>
                                     </div>
                                     
-                                    <a href={publishResult.terminalUrl} target="_blank" rel="noopener noreferrer" className="text-center text-blue-600 underline font-bold hover:text-blue-800">
-                                        🔗 뉴스 터미널 미리보기 →
-                                    </a>
+                                    <div className="flex gap-3">
+                                        <a href={publishResult.terminalUrl} target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-gray-100 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors">
+                                            🔗 미리보기
+                                        </a>
+                                        <button 
+                                            onClick={() => setPublishResult(null)}
+                                            className="flex-1 bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors"
+                                        >
+                                            ✓ 확인
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <span>❌ 오류: {publishResult.error}</span>
-                            )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {publishResult && !publishResult.success && (
+                        <div className="p-4 rounded-lg bg-red-100 text-red-800">
+                            <span>❌ 오류: {publishResult.error}</span>
+                            <button onClick={() => setPublishResult(null)} className="ml-4 underline">닫기</button>
                         </div>
                     )}
                 </div>
