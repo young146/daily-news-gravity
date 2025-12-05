@@ -125,17 +125,19 @@ export default async function AdminPage() {
                     <Link href="/admin/card-news" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition flex items-center gap-2">
                         📮 전령카드 확인하기
                     </Link>
+                    <Link href="/admin/settings" className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition flex items-center gap-2">
+                        ⚙️ 설정
+                    </Link>
                     <form action={resetAllNews}>
                         <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition flex items-center gap-2" title="Delete ALL news items">
-                            ⚠️ Hard Reset (Delete All)
+                            ⚠️ Hard Reset
                         </button>
                     </form>
                     <form action={archiveOldNews}>
                         <button type="submit" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition flex items-center gap-2" title="Archive items older than 24h">
-                            🧹 Cleanup Old News
+                            🧹 Cleanup
                         </button>
                     </form>
-
                 </div>
             </div>
 

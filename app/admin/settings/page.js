@@ -1,0 +1,376 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+export default function SettingsPage() {
+  const [crawlStatus, setCrawlStatus] = useState({});
+  const [systemInfo, setSystemInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSystemInfo();
+  }, []);
+
+  const fetchSystemInfo = async () => {
+    try {
+      const res = await fetch('/api/system-info');
+      const data = await res.json();
+      setSystemInfo(data);
+    } catch (error) {
+      console.error('Failed to fetch system info:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const crawlSource = async (source) => {
+    setCrawlStatus(prev => ({ ...prev, [source]: 'crawling' }));
+    try {
+      const res = await fetch('/api/crawl-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCrawlStatus(prev => ({ ...prev, [source]: `완료 (${data.count}개)` }));
+      } else {
+        setCrawlStatus(prev => ({ ...prev, [source]: `오류: ${data.error}` }));
+      }
+    } catch (error) {
+      setCrawlStatus(prev => ({ ...prev, [source]: `오류: ${error.message}` }));
+    }
+  };
+
+  const sources = [
+    { id: 'vnexpress', name: 'VnExpress (영문)', file: 'vnexpress' },
+    { id: 'vnexpress-vn', name: 'VnExpress (베트남어)', file: 'vnexpress-vn' },
+    { id: 'yonhap', name: 'Yonhap (연합뉴스)', file: 'yonhap' },
+    { id: 'insidevina', name: 'InsideVina', file: 'insidevina' },
+    { id: 'tuoitre', name: 'TuoiTre', file: 'tuoitre' },
+    { id: 'thanhnien', name: 'ThanhNien', file: 'thanhnien' },
+    { id: 'vnanet', name: 'VNA', file: 'vnanet' },
+  ];
+
+  const commands = [
+    { 
+      title: '전체 크롤링', 
+      command: 'node scripts/crawler.js',
+      description: '모든 뉴스 소스에서 크롤링'
+    },
+    { 
+      title: 'VNA만 크롤링', 
+      command: 'node -e "require(\'./scripts/crawlers/vnanet\')().then(i => console.log(i.length, \'items\'))"',
+      description: 'VNA 뉴스만 테스트 (DB 저장 없음)'
+    },
+    { 
+      title: 'Yonhap만 크롤링', 
+      command: 'node -e "require(\'./scripts/crawlers/yonhap\')().then(i => console.log(i.length, \'items\'))"',
+      description: '연합뉴스만 테스트 (DB 저장 없음)'
+    },
+    { 
+      title: '데이터베이스 초기화', 
+      command: 'npx prisma db push',
+      description: 'Prisma 스키마를 DB에 적용'
+    },
+    { 
+      title: 'DB 스튜디오', 
+      command: 'npx prisma studio',
+      description: 'Prisma Studio (DB 관리 UI)'
+    },
+  ];
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>시스템 설정</h1>
+        <Link href="/admin" style={{ 
+          padding: '10px 20px', 
+          background: '#6b7280', 
+          color: 'white', 
+          textDecoration: 'none',
+          borderRadius: '6px'
+        }}>
+          ← 대시보드로
+        </Link>
+      </div>
+
+      {/* 소스별 크롤링 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          📰 소스별 크롤링
+        </h2>
+        <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+          개별 뉴스 소스만 선택적으로 크롤링할 수 있습니다.
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+          {sources.map(source => (
+            <div key={source.id} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              padding: '12px 16px',
+              background: '#f9fafb',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div>
+                <div style={{ fontWeight: '500', color: '#1f2937' }}>{source.name}</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af' }}>{source.file}.js</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {crawlStatus[source.id] && (
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: crawlStatus[source.id].includes('오류') ? '#ef4444' : '#10b981'
+                  }}>
+                    {crawlStatus[source.id]}
+                  </span>
+                )}
+                <button
+                  onClick={() => crawlSource(source.id)}
+                  disabled={crawlStatus[source.id] === 'crawling'}
+                  style={{
+                    padding: '8px 16px',
+                    background: crawlStatus[source.id] === 'crawling' ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: crawlStatus[source.id] === 'crawling' ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {crawlStatus[source.id] === 'crawling' ? '크롤링 중...' : '크롤링'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 시스템 정보 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          ⚙️ 시스템 정보
+        </h2>
+        
+        {loading ? (
+          <p style={{ color: '#6b7280' }}>로딩 중...</p>
+        ) : systemInfo ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+            <InfoCard 
+              title="데이터베이스" 
+              value={systemInfo.database?.connected ? '연결됨' : '연결 실패'}
+              status={systemInfo.database?.connected ? 'success' : 'error'}
+              detail={`총 ${systemInfo.database?.totalNews || 0}개 뉴스`}
+            />
+            <InfoCard 
+              title="WordPress" 
+              value={systemInfo.wordpress?.configured ? '설정됨' : '미설정'}
+              status={systemInfo.wordpress?.configured ? 'success' : 'warning'}
+              detail={systemInfo.wordpress?.url || '-'}
+            />
+            <InfoCard 
+              title="OpenAI API" 
+              value={systemInfo.openai?.configured ? '설정됨' : '미설정'}
+              status={systemInfo.openai?.configured ? 'success' : 'error'}
+            />
+            <InfoCard 
+              title="오늘 게시된 뉴스" 
+              value={`${systemInfo.database?.publishedToday || 0}개`}
+              status="info"
+            />
+          </div>
+        ) : (
+          <p style={{ color: '#ef4444' }}>시스템 정보를 불러올 수 없습니다.</p>
+        )}
+      </section>
+
+      {/* WordPress 설정 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          🌐 WordPress 설정
+        </h2>
+        
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <TableRow label="사이트 URL" value="https://chaovietnam.co.kr" />
+            <TableRow label="사용자명" value="chaovietnam" />
+            <TableRow label="본문 카테고리" value="6, 31 (뉴스 > 데일리뉴스)" />
+            <TableRow label="뉴스 터미널 페이지" value="https://chaovietnam.co.kr/daily-news-terminal/" link />
+            <TableRow label="Jenny 플러그인 버전" value="v1.4" />
+          </tbody>
+        </table>
+      </section>
+
+      {/* 유용한 명령어 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          💻 터미널 명령어
+        </h2>
+        <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+          Replit Shell에서 직접 실행할 수 있는 명령어입니다.
+        </p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {commands.map((cmd, index) => (
+            <div key={index} style={{ 
+              padding: '16px',
+              background: '#1f2937',
+              borderRadius: '8px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ color: '#10b981', fontWeight: '600', fontSize: '14px' }}>{cmd.title}</span>
+                <span style={{ color: '#9ca3af', fontSize: '12px' }}>{cmd.description}</span>
+              </div>
+              <code style={{ 
+                color: '#fbbf24', 
+                fontFamily: 'monospace', 
+                fontSize: '13px',
+                wordBreak: 'break-all'
+              }}>
+                $ {cmd.command}
+              </code>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 크롤러 파일 위치 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          📁 파일 구조
+        </h2>
+        
+        <div style={{ 
+          background: '#f9fafb', 
+          padding: '20px', 
+          borderRadius: '8px',
+          fontFamily: 'monospace',
+          fontSize: '13px',
+          lineHeight: '1.8'
+        }}>
+          <div style={{ color: '#6b7280' }}>scripts/</div>
+          <div style={{ paddingLeft: '20px' }}>
+            <div style={{ color: '#3b82f6' }}>crawler.js</div>
+            <div style={{ color: '#6b7280' }}>crawlers/</div>
+            <div style={{ paddingLeft: '20px', color: '#10b981' }}>
+              vnexpress.js<br/>
+              vnexpress-vn.js<br/>
+              yonhap.js<br/>
+              insidevina.js<br/>
+              tuoitre.js<br/>
+              thanhnien.js<br/>
+              vnanet.js
+            </div>
+          </div>
+          <div style={{ color: '#6b7280', marginTop: '10px' }}>lib/</div>
+          <div style={{ paddingLeft: '20px', color: '#f59e0b' }}>
+            publisher.js<br/>
+            openai.js<br/>
+            prisma.js
+          </div>
+          <div style={{ color: '#6b7280', marginTop: '10px' }}>wordpress-plugin/</div>
+          <div style={{ paddingLeft: '20px', color: '#ec4899' }}>
+            jenny-daily-news.php (v1.4)<br/>
+            xinchao-image-uploader.php
+          </div>
+        </div>
+      </section>
+
+      {/* 일일 워크플로우 */}
+      <section style={{ 
+        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        border: '1px solid #f59e0b'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#92400e' }}>
+          📋 일일 워크플로우
+        </h2>
+        
+        <ol style={{ paddingLeft: '24px', color: '#78350f', lineHeight: '2' }}>
+          <li><strong>크롤링</strong>: 대시보드에서 "Crawl News" 버튼 클릭 (매일 아침)</li>
+          <li><strong>선택</strong>: 게시할 뉴스 ~20개 선택 (TopNews 1개, CardNews 4개 포함)</li>
+          <li><strong>번역</strong>: 선택한 뉴스 번역 및 편집</li>
+          <li><strong>게시</strong>: "Publish Selected" 버튼으로 WordPress에 게시</li>
+          <li><strong>카드 엽서</strong>: /admin/card-news 에서 카드 엽서 생성 및 게시</li>
+          <li><strong>SNS 공유</strong>: 뉴스 터미널 URL 공유</li>
+        </ol>
+      </section>
+    </div>
+  );
+}
+
+function InfoCard({ title, value, status, detail }) {
+  const colors = {
+    success: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+    error: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+    warning: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+    info: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+  };
+  
+  const color = colors[status] || colors.info;
+  
+  return (
+    <div style={{ 
+      padding: '16px',
+      background: color.bg,
+      borderRadius: '8px',
+      border: `1px solid ${color.border}`
+    }}>
+      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>{title}</div>
+      <div style={{ fontSize: '18px', fontWeight: '600', color: color.text }}>{value}</div>
+      {detail && <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>{detail}</div>}
+    </div>
+  );
+}
+
+function TableRow({ label, value, link }) {
+  return (
+    <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+      <td style={{ padding: '12px 0', color: '#6b7280', width: '200px' }}>{label}</td>
+      <td style={{ padding: '12px 0', color: '#1f2937', fontWeight: '500' }}>
+        {link ? (
+          <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+            {value}
+          </a>
+        ) : value}
+      </td>
+    </tr>
+  );
+}
