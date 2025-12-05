@@ -1,13 +1,81 @@
 <?php
 /**
  * Plugin Name: Jenny Daily News Display
- * Description: Displays daily news in a beautiful card layout using the shortcode [daily_news_list]. Shows excerpt and links to full article.
- * Version: 1.4
+ * Description: Displays daily news in a beautiful card layout using the shortcode [daily_news_list]. Shows excerpt and links to full article. Includes weather and exchange rate info.
+ * Version: 1.5
  * Author: Jenny (Antigravity)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
+}
+
+function jenny_get_weather_data() {
+    $cache_key = 'jenny_weather_data';
+    $cached = get_transient( $cache_key );
+    if ( $cached !== false ) {
+        return $cached;
+    }
+
+    $cities = array(
+        'hanoi' => array( 'name' => '하노이', 'query' => 'Hanoi' ),
+        'hochiminh' => array( 'name' => '호치민', 'query' => 'Ho+Chi+Minh' ),
+        'seoul' => array( 'name' => '서울', 'query' => 'Seoul' ),
+    );
+
+    $weather_data = array();
+    foreach ( $cities as $key => $city ) {
+        $url = 'https://wttr.in/' . $city['query'] . '?format=%t&m';
+        $response = wp_remote_get( $url, array( 'timeout' => 5 ) );
+        if ( ! is_wp_error( $response ) ) {
+            $temp = trim( wp_remote_retrieve_body( $response ) );
+            $temp = str_replace( '+', '', $temp );
+            $weather_data[ $key ] = array(
+                'name' => $city['name'],
+                'temp' => $temp,
+            );
+        } else {
+            $weather_data[ $key ] = array(
+                'name' => $city['name'],
+                'temp' => '-',
+            );
+        }
+    }
+
+    set_transient( $cache_key, $weather_data, 30 * MINUTE_IN_SECONDS );
+    return $weather_data;
+}
+
+function jenny_get_exchange_data() {
+    $cache_key = 'jenny_exchange_data';
+    $cached = get_transient( $cache_key );
+    if ( $cached !== false ) {
+        return $cached;
+    }
+
+    $exchange_data = array(
+        'usd' => '-',
+        'krw' => '-',
+    );
+
+    $url = 'https://open.er-api.com/v6/latest/VND';
+    $response = wp_remote_get( $url, array( 'timeout' => 5 ) );
+    if ( ! is_wp_error( $response ) ) {
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $body['rates'] ) ) {
+            if ( isset( $body['rates']['USD'] ) ) {
+                $usd_rate = 1 / $body['rates']['USD'];
+                $exchange_data['usd'] = number_format( $usd_rate, 0 );
+            }
+            if ( isset( $body['rates']['KRW'] ) ) {
+                $krw_rate = 1 / $body['rates']['KRW'];
+                $exchange_data['krw'] = number_format( $krw_rate, 2 );
+            }
+        }
+    }
+
+    set_transient( $cache_key, $exchange_data, 60 * MINUTE_IN_SECONDS );
+    return $exchange_data;
 }
 
 function jenny_register_meta_fields() {
@@ -78,8 +146,25 @@ function jenny_daily_news_shortcode( $atts ) {
 
     $page_url = get_permalink();
     
+    $weather = jenny_get_weather_data();
+    $exchange = jenny_get_exchange_data();
+    
     $output = '<div class="jenny-date-filter">';
     $output .= '<div class="jenny-filter-row">';
+    
+    $output .= '<div class="jenny-info-section">';
+    $output .= '<div class="jenny-weather-box">';
+    $output .= '<span class="jenny-info-label">날씨</span>';
+    foreach ( $weather as $city ) {
+        $output .= '<span class="jenny-weather-item">' . esc_html( $city['name'] ) . ' ' . esc_html( $city['temp'] ) . '</span>';
+    }
+    $output .= '</div>';
+    $output .= '<div class="jenny-exchange-box">';
+    $output .= '<span class="jenny-info-label">환율</span>';
+    $output .= '<span class="jenny-exchange-item">USD ' . esc_html( $exchange['usd'] ) . '₫</span>';
+    $output .= '<span class="jenny-exchange-item">KRW ' . esc_html( $exchange['krw'] ) . '₫</span>';
+    $output .= '</div>';
+    $output .= '</div>';
     
     if ( $is_filtered ) {
         $output .= '<a href="' . esc_url( $page_url ) . '" class="jenny-filter-btn">오늘의 뉴스</a>';
@@ -190,6 +275,43 @@ function jenny_get_styles() {
             gap: 12px;
             align-items: center;
             flex-wrap: wrap;
+        }
+        .jenny-info-section {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-right: auto;
+        }
+        .jenny-weather-box,
+        .jenny-exchange-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+        .jenny-info-label {
+            font-weight: 700;
+            color: #ea580c;
+            padding: 4px 8px;
+            background: #fef3c7;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .jenny-weather-item,
+        .jenny-exchange-item {
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .jenny-info-section {
+                width: 100%;
+                margin-bottom: 8px;
+                flex-wrap: wrap;
+            }
         }
         .jenny-filter-btn {
             display: inline-block;
