@@ -1,28 +1,10 @@
 import { ImageResponse } from '@vercel/og';
-import { NextResponse } from 'next/server';
-
-export const runtime = 'edge';
-
-async function loadNotoSansKR() {
-    const fontUrl = 'https://cdn.jsdelivr.net/fontsource/fonts/noto-sans-kr@latest/korean-700-normal.woff';
-    try {
-        const response = await fetch(fontUrl);
-        if (response.ok) {
-            return await response.arrayBuffer();
-        }
-    } catch (e) {
-        console.error('Failed to load font:', e);
-    }
-    return null;
-}
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const title = searchParams.get('title') || '오늘의 뉴스';
     const summary = searchParams.get('summary') || '';
     const date = searchParams.get('date') || new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-
-    const fontData = await loadNotoSansKR();
 
     try {
         return new ImageResponse(
@@ -33,9 +15,9 @@ export async function GET(request) {
                         height: '630px',
                         display: 'flex',
                         flexDirection: 'column',
-                        fontFamily: '"Noto Sans KR", sans-serif',
-                        position: 'relative',
                         background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                        fontFamily: 'sans-serif',
+                        position: 'relative',
                     }}
                 >
                     {/* Big TEST Watermark */}
@@ -91,11 +73,11 @@ export async function GET(request) {
                                         fontSize: '30px',
                                     }}
                                 >
-                                    🇻🇳
+                                    VN
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span style={{ color: 'white', fontSize: '36px', fontWeight: 'bold' }}>
-                                        테스트 카드
+                                        Test Card
                                     </span>
                                     <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px' }}>
                                         SERVER-SIDE RENDERING
@@ -133,6 +115,9 @@ export async function GET(request) {
                                     padding: '40px 60px',
                                     borderRadius: '20px',
                                     border: '4px solid rgba(255,255,255,0.3)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
                                 }}
                             >
                                 <h1
@@ -179,7 +164,7 @@ export async function GET(request) {
                                     fontWeight: 'bold',
                                 }}
                             >
-                                ✅ 한글 폰트 테스트
+                                Font Test: ABC 123
                             </div>
                             <div
                                 style={{
@@ -191,7 +176,7 @@ export async function GET(request) {
                                     fontWeight: 'bold',
                                 }}
                             >
-                                🚀 @vercel/og 사용
+                                @vercel/og
                             </div>
                         </div>
                     </div>
@@ -200,18 +185,13 @@ export async function GET(request) {
             {
                 width: 1200,
                 height: 630,
-                fonts: fontData ? [
-                    {
-                        name: 'Noto Sans KR',
-                        data: fontData,
-                        weight: 700,
-                        style: 'normal',
-                    },
-                ] : [],
             }
         );
     } catch (e) {
         console.error('Error generating image:', e);
-        return NextResponse.json({ error: 'Failed to generate image' }, { status: 500 });
+        return new Response(JSON.stringify({ error: 'Failed to generate image', details: e.message }), { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
