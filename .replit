@@ -12,6 +12,9 @@ packages = ["chromium"]
 DATABASE_URL = "file:/home/runner/workspace/prisma/dev.db"
 WORDPRESS_URL = "https://chaovietnam.co.kr"
 WORDPRESS_USERNAME = "chaovietnam"
+ADMIN_EMAIL = "admin@chaovietnam.co.kr"
+ADMIN_PASSWORD = "admin123"
+JWT_SECRET = "xinchao-vietnam-news-jwt-secret-2025"
 
 [workflows]
 runButton = "Project"
@@ -40,6 +43,10 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 36119
+externalPort = 3000
 
 [deployment]
 deploymentTarget = "autoscale"

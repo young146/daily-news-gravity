@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser, hashPassword, isAdmin } from '@/lib/auth';
+import { getCurrentUser, hashPassword, validatePassword } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -39,6 +39,14 @@ export async function POST(request) {
     if (!email || !password) {
       return NextResponse.json(
         { error: '이메일과 비밀번호는 필수입니다.' },
+        { status: 400 }
+      );
+    }
+
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      return NextResponse.json(
+        { error: passwordErrors[0] },
         { status: 400 }
       );
     }

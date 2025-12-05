@@ -84,6 +84,37 @@ Single publication target on chaovietnam.co.kr:
 | `DATABASE_URL` | SQLite database path |
 | `TELEGRAM_BOT_TOKEN` | (선택) 텔레그램 봇 토큰 |
 | `TELEGRAM_CHAT_ID` | (선택) 텔레그램 채팅 ID |
+| `ADMIN_EMAIL` | 초기 관리자 이메일 (default: admin@chaovietnam.co.kr) |
+| `ADMIN_PASSWORD` | 초기 관리자 비밀번호 (default: admin123) |
+| `JWT_SECRET` | JWT 토큰 시크릿 키 |
+
+## Authentication System
+
+관리자 페이지 접근을 위한 로그인 시스템이 구현되어 있습니다.
+
+### 로그인
+- URL: `/admin/login`
+- 첫 로그인 시 환경변수의 ADMIN_EMAIL/ADMIN_PASSWORD로 초기 관리자 계정 자동 생성
+
+### 권한 레벨
+| 권한 | 설명 |
+|------|------|
+| ADMIN | 모든 기능 + 사용자 관리 |
+| USER | 뉴스 크롤링, 번역, 게시 (사용자 관리 불가) |
+
+### 사용자 관리
+- URL: `/admin/users` (ADMIN 권한만 접근 가능)
+- 새 사용자 추가, 삭제 기능
+- 권한 설정 (ADMIN/USER)
+
+### 관련 파일
+| File | Purpose |
+|------|---------|
+| `lib/auth.js` | 인증 로직 (JWT, 비밀번호 해시) |
+| `middleware.js` | 관리자 페이지 접근 제한 |
+| `app/admin/login/page.js` | 로그인 페이지 |
+| `app/admin/users/page.js` | 사용자 관리 페이지 |
+| `app/api/auth/*` | 인증 API (login, logout, me, users) |
 
 ## Card News (카드 엽서)
 
