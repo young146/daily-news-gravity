@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { getSeoulWeather, getExchangeRates } from '@/lib/external-data';
-import CardNewsPreview from './CardNewsPreview';
+import CardNewsSimple from './CardNewsSimple';
 
 const prisma = new PrismaClient();
 
@@ -10,19 +10,13 @@ async function getData() {
         orderBy: { publishedAt: 'desc' }
     }) || await prisma.newsItem.findFirst({ orderBy: { createdAt: 'desc' } });
 
-    const cardNewsItems = await prisma.newsItem.findMany({
-        where: { isCardNews: true },
-        orderBy: { publishedAt: 'desc' },
-        take: 4
-    });
-
     const weather = await getSeoulWeather();
     const rates = await getExchangeRates();
 
-    return { topNews, cardNewsItems, weather, rates };
+    return { topNews, weather, rates };
 }
 
 export default async function CardNewsPreviewPage() {
     const data = await getData();
-    return <CardNewsPreview data={data} />;
+    return <CardNewsSimple data={data} />;
 }

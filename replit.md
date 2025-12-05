@@ -83,17 +83,18 @@ Single publication target on chaovietnam.co.kr:
 | `WORDPRESS_USERNAME` | WordPress username (default: chaovietnam) |
 | `DATABASE_URL` | SQLite database path |
 
-## Card News (전령 카드/카드 엽서)
+## Card News (카드 엽서)
 
-카드 엽서는 오늘의 주요 뉴스를 한눈에 보여주는 시각적 카드입니다.
+카드 엽서는 오늘의 주요 뉴스를 SNS 공유용으로 만든 시각적 카드입니다.
 
-### 구성 요소
-- **특집 뉴스 (TopNews)**: 왼쪽 60% 영역, 큰 이미지와 제목
-- **카드 뉴스 (4개)**: 오른쪽 40% 영역, 4개의 작은 카드
-- **날씨/환율 정보**: 하단 푸터 영역
+### 디자인 (Simple Hero - 1200×800)
+- **TopNews 1개만** 크게 표시 (SNS 썸네일에서도 잘 보임)
+- 상단: "Xin Chao Vietnam 오늘의 뉴스" + 날짜
+- 중앙: 큰 배경 이미지 + 제목(56px) + 요약
+- 하단: 로고 + 서울 날씨 + 환율 (USD, KRW)
 
 ### 사용 방법
-1. 관리자 대시보드에서 뉴스 선택 시 `isTopNews`, `isCardNews` 지정
+1. 관리자 대시보드에서 뉴스 선택 후 **"Set as Top"** 클릭
 2. `/admin/card-news` 페이지에서 카드 엽서 미리보기
 3. **"WordPress에 카드 엽서 게시"** 버튼으로 WordPress에 자동 게시
 
@@ -101,9 +102,9 @@ Single publication target on chaovietnam.co.kr:
 | File | Purpose |
 |------|---------|
 | `app/admin/card-news/page.js` | 카드 엽서 미리보기 페이지 |
-| `app/admin/card-news/CardNewsPreviewMars.js` | Mars Explorer 디자인 |
+| `app/admin/card-news/CardNewsSimple.js` | Simple Hero 디자인 (현재 사용) |
+| `app/admin/card-news/CardNewsPreviewMars.js` | Mars Explorer 디자인 (구버전) |
 | `app/api/publish-card-news/route.js` | WordPress 게시 API |
-| `lib/publisher.js` | `publishCardNewsToWordPress()` 함수 |
 
 ### WordPress 게시 결과
 - **뉴스 터미널 페이지**: `https://chaovietnam.co.kr/daily-news-terminal/`
@@ -124,9 +125,14 @@ Single publication target on chaovietnam.co.kr:
 
 ## Recent Changes (Dec 5, 2025)
 
+- **카드 엽서 새 디자인**: Simple Hero 스타일 (1200×800)
+  - TopNews 1개만 크게 표시, SNS 썸네일에서도 제목이 잘 보임
+  - 4개 카드 그리드 제거 → 단일 히어로 레이아웃
+- **설정 페이지 개선**: 오늘 발행된 뉴스 관리 섹션 추가
+- **버튼 깜빡임 수정**: Translate & Generate 버튼 애니메이션 제거
+- **뉴스 삭제 기능**: 각 뉴스 항목에 🗑️ 삭제 버튼 추가
 - **요약본 게시 제거**: 본문만 WordPress에 게시 (카테고리 31)
 - **Jenny 플러그인 v1.3**: 본문(31)에서 직접 가져오고, excerpt 사용, permalink로 링크
-- **게시 로직 단순화**: `publishToDailySite` 제거, 본문 하나만 게시
 
 ### Dec 4, 2025
 - **Yonhap SSL fix**: Images downloaded via Replit first, then uploaded to WordPress
