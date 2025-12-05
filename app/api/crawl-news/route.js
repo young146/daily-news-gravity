@@ -404,14 +404,14 @@ async function crawlVnaNet() {
     const axios = (await import('axios')).default;
     const items = [];
     try {
-        console.log('Crawling VNA...');
+        console.log('Crawling VNA (English)...');
         
         const agent = new https.Agent({ 
             rejectUnauthorized: false,
             secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
         });
         
-        const { data } = await axios.get('https://vnanet.vn/vi/anh', { 
+        const { data } = await axios.get('https://vnanet.vn/en/', { 
             timeout: 15000,
             httpsAgent: agent,
             headers: { 
@@ -422,27 +422,26 @@ async function crawlVnaNet() {
         const $ = cheerio.load(data);
         
         const listItems = [];
+        const seen = new Set();
         
-        $('.story-item, .box-news-item, article, .item-news, .news-item').each((i, el) => {
+        $('a[href*=".html"]').each((i, el) => {
             if (listItems.length >= 6) return;
             
-            const titleEl = $(el).find('h3 a, .title a, h2 a, a.story-title, .story-heading a').first();
-            let title = titleEl.text().trim();
-            let link = titleEl.attr('href');
+            const title = $(el).text().trim();
+            const link = $(el).attr('href');
             
-            if (!title) {
-                title = $(el).find('a').first().text().trim();
-                link = $(el).find('a').first().attr('href');
-            }
+            if (!title || title.length < 15) return;
+            if (!link || !link.includes('/en/')) return;
             
-            const summary = $(el).find('.sapo, .description, .lead, .story-summary').text().trim();
+            const fullUrl = link.startsWith('http') ? link : `https://vnanet.vn${link}`;
             
-            if (title && link) {
-                if (!link.startsWith('http')) {
-                    link = `https://vnanet.vn${link}`;
-                }
-                listItems.push({ title, summary, url: link });
-            }
+            if (seen.has(fullUrl)) return;
+            seen.add(fullUrl);
+            
+            const container = $(el).closest('li, div, td');
+            const summary = container.find('.news-sapo, .sapo, .summary, p').text().trim();
+            
+            listItems.push({ title, summary, url: fullUrl });
         });
 
         console.log(`VNA list items found: ${listItems.length}`);
@@ -455,7 +454,7 @@ async function crawlVnaNet() {
                     headers: { 'User-Agent': USER_AGENT }
                 });
                 const $d = cheerio.load(detailData);
-                const content = $d('.story-content').html() || $d('.article-content').html() || $d('.detail-content').html();
+                const content = $d('.news-detail, .detail-content, .content-detail, .fck_detail').html();
                 const imageUrl = $d('meta[property="og:image"]').attr('content');
                 
                 items.push({
