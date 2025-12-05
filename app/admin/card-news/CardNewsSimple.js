@@ -9,37 +9,75 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
     const [publishResult, setPublishResult] = useState(null);
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
-    const generateServerImage = async () => {
-        const params = new URLSearchParams({
-            title: topNews?.titleKo || topNews?.title || '오늘의 뉴스',
-            summary: topNews?.summaryKo || topNews?.summary || '',
-            date: today,
-            weather: weather ? `${getWeatherIcon(weather.weatherCode)} ${weather.temperature}°C` : '☀️ 25°C',
-            usd: rates?.usdVnd?.toLocaleString() || '25,400',
-            krw: rates?.krwVnd?.toLocaleString() || '17.8',
-            image: topNews?.imageUrl || '',
-        });
+    const generateCanvas = async () => {
+        if (!cardRef.current) return null;
+        window.scrollTo(0, 0);
         
-        const response = await fetch(`/api/generate-card-image?${params.toString()}`);
-        if (!response.ok) {
-            throw new Error('Server image generation failed');
+        // Wait for fonts to load
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
         }
-        
-        const blob = await response.blob();
-        return blob;
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const html2canvas = (await import('html2canvas')).default;
+        const images = cardRef.current.querySelectorAll('img');
+        const originalSrcs = [];
+
+        await Promise.all(Array.from(images).map(async (img, i) => {
+            originalSrcs[i] = img.src;
+            if (img.src.startsWith('/') || img.src.includes(window.location.origin)) return;
+            try {
+                const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(img.src)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Proxy fetch failed');
+                const blob = await response.blob();
+                img.src = URL.createObjectURL(blob);
+            } catch (e) {
+                console.warn('Failed to proxy image:', img.src);
+            }
+        }));
+
+        const canvas = await html2canvas(cardRef.current, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#0f172a',
+            logging: false,
+            scrollY: 0,
+            windowWidth: 1200,
+            windowHeight: 630,
+            onclone: (clonedDoc) => {
+                // Force Noto Sans KR font in cloned document
+                const style = clonedDoc.createElement('style');
+                style.textContent = `
+                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+                    * { 
+                        font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif !important; 
+                    }
+                `;
+                clonedDoc.head.appendChild(style);
+            }
+        });
+
+        images.forEach((img, i) => {
+            if (originalSrcs[i]) {
+                URL.revokeObjectURL(img.src);
+                img.src = originalSrcs[i];
+            }
+        });
+        return canvas;
     };
 
     const handleDownloadImage = async () => {
         setIsGenerating(true);
         try {
-            const blob = await generateServerImage();
-            if (blob) {
-                const url = URL.createObjectURL(blob);
+            const canvas = await generateCanvas();
+            if (canvas) {
+                const image = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
-                link.href = url;
+                link.href = image;
                 link.download = `xinchao-news-${new Date().toISOString().split('T')[0]}.png`;
                 link.click();
-                URL.revokeObjectURL(url);
             }
         } catch (error) {
             alert(`Failed: ${error.message}`);
@@ -54,20 +92,26 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
         setPublishResult(null);
         
         try {
-            const blob = await generateServerImage();
-            if (!blob) {
+            const canvas = await generateCanvas();
+            if (!canvas) {
                 throw new Error('이미지 생성에 실패했습니다');
             }
             
-            const formData = new FormData();
-            formData.append('image', blob, 'card-news.png');
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
             
-            const apiResponse = await fetch('/api/publish-card-news', {
+            if (!blob) {
+                throw new Error('이미지 변환에 실패했습니다');
+            }
+            
+            const formData = new FormData();
+            formData.append('image', blob, 'card-news.jpg');
+            
+            const response = await fetch('/api/publish-card-news', {
                 method: 'POST',
                 body: formData
             });
             
-            const result = await apiResponse.json();
+            const result = await response.json();
             
             if (result.success) {
                 setPublishResult({
