@@ -34,39 +34,38 @@ function jenny_get_weather_html() {
 }
 
 function jenny_get_weather_fallback() {
-    $cache_key = 'jenny_weather_html_v2';
+    $cache_key = 'jenny_weather_html_v4';
     $cached = get_transient( $cache_key );
-    if ( $cached !== false && is_string( $cached ) ) {
+    if ( $cached !== false && is_string( $cached ) && strpos( $cached, '°C' ) !== false ) {
         return $cached;
     }
 
     $cities = array(
-        array( 'name' => '하노이', 'query' => 'Hanoi' ),
-        array( 'name' => '호치민', 'query' => 'Ho+Chi+Minh' ),
-        array( 'name' => '서울', 'query' => 'Seoul' ),
+        array( 'name' => '하노이', 'lat' => 21.0285, 'lon' => 105.8542 ),
+        array( 'name' => '호치민', 'lat' => 10.8231, 'lon' => 106.6297 ),
+        array( 'name' => '서울', 'lat' => 37.5665, 'lon' => 126.9780 ),
     );
 
     $output = '';
     foreach ( $cities as $city ) {
-        $url = 'https://wttr.in/' . $city['query'] . '?format=%t&m';
-        $response = wp_remote_get( $url, array( 
-            'timeout' => 10,
-            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        ) );
+        $url = 'https://api.open-meteo.com/v1/forecast?latitude=' . $city['lat'] . '&longitude=' . $city['lon'] . '&current_weather=true';
+        $response = wp_remote_get( $url, array( 'timeout' => 10 ) );
         $temp = '--';
+        
         if ( ! is_wp_error( $response ) ) {
-            $body = trim( wp_remote_retrieve_body( $response ) );
-            if ( ! empty( $body ) && strpos( $body, '°C' ) !== false ) {
-                $temp = str_replace( '+', '', $body );
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $body['current_weather']['temperature'] ) ) {
+                $temp = round( $body['current_weather']['temperature'] ) . '°C';
             }
         }
+        
         $output .= '<div class="jenny-weather-chip">';
         $output .= '<span class="jenny-chip-city">' . esc_html( $city['name'] ) . '</span>';
         $output .= '<span class="jenny-chip-temp">' . esc_html( $temp ) . '</span>';
         $output .= '</div>';
     }
 
-    if ( ! empty( $output ) ) {
+    if ( strpos( $output, '°C' ) !== false ) {
         set_transient( $cache_key, $output, 30 * MINUTE_IN_SECONDS );
     }
     return $output;
@@ -188,6 +187,7 @@ function jenny_daily_news_shortcode( $atts ) {
     $output .= '<div class="jenny-card-header">';
     $output .= '<span class="jenny-card-icon">🌤</span>';
     $output .= '<span class="jenny-card-title">오늘의 날씨</span>';
+    $output .= '<span class="jenny-card-source">(Open-Meteo)</span>';
     $output .= '</div>';
     $output .= '<div class="jenny-card-chips">';
     $output .= jenny_get_weather_fallback();
