@@ -73,9 +73,9 @@ function jenny_get_weather_fallback() {
 }
 
 function jenny_get_exchange_data() {
-    $cache_key = 'jenny_exchange_data';
+    $cache_key = 'jenny_exchange_v3';
     $cached = get_transient( $cache_key );
-    if ( $cached !== false ) {
+    if ( $cached !== false && is_array( $cached ) && isset( $cached['krw_100'] ) ) {
         return $cached;
     }
 
@@ -85,16 +85,23 @@ function jenny_get_exchange_data() {
     );
 
     $url = 'https://open.er-api.com/v6/latest/USD';
-    $response = wp_remote_get( $url, array( 'timeout' => 5 ) );
+    $response = wp_remote_get( $url, array( 
+        'timeout' => 10,
+        'user-agent' => 'Mozilla/5.0'
+    ) );
+    
     if ( ! is_wp_error( $response ) ) {
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
-        if ( isset( $body['rates'] ) ) {
-            if ( isset( $body['rates']['VND'] ) ) {
-                $exchange_data['usd'] = number_format( $body['rates']['VND'], 0 );
-            }
-            if ( isset( $body['rates']['KRW'] ) && isset( $body['rates']['VND'] ) ) {
-                $krw_to_vnd = $body['rates']['VND'] / $body['rates']['KRW'] * 100;
-                $exchange_data['krw_100'] = number_format( $krw_to_vnd, 0 );
+        if ( isset( $body['rates'] ) && isset( $body['rates']['VND'] ) ) {
+            $vnd_rate = floatval( $body['rates']['VND'] );
+            $exchange_data['usd'] = number_format( $vnd_rate, 0 );
+            
+            if ( isset( $body['rates']['KRW'] ) ) {
+                $krw_rate = floatval( $body['rates']['KRW'] );
+                if ( $krw_rate > 0 ) {
+                    $krw_to_vnd = ( $vnd_rate / $krw_rate ) * 100;
+                    $exchange_data['krw_100'] = number_format( $krw_to_vnd, 0 );
+                }
             }
         }
     }
