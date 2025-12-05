@@ -12,13 +12,20 @@ export async function translateItemAction(id) {
         const item = await prisma.newsItem.findUnique({ where: { id } });
         if (!item) throw new Error('Item not found');
 
-        const translated = await translateNewsItem(item);
+        const { translatedTitle, translatedSummary, translatedContent } = await translateNewsItem(
+            item.title,
+            item.summary,
+            item.content || item.summary
+        );
 
         await prisma.newsItem.update({
             where: { id },
             data: {
-                ...translated,
-                status: 'TRANSLATED' // Update status if needed
+                translatedTitle,
+                translatedSummary,
+                translatedContent,
+                translationStatus: 'DRAFT',
+                status: 'TRANSLATED'
             }
         });
 

@@ -12,27 +12,35 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🚀 Starting Multi-Source Crawler (7 Sites)...');
 
-  // Run all crawlers in parallel
-  const [vnItems, yhItems, ivItems, ttItems, tnItems, vnaItems, vnvnItems] = await Promise.all([
-    crawlVnExpress(),
-    crawlYonhap(),
-    crawlInsideVina(),
-    crawlTuoitre(),
-    crawlThanhNien(),
-    crawlVnaNet(),
-    crawlVnExpressVN()
-  ]);
-
-  const allItems = [
-    ...vnItems,
-    ...yhItems,
-    ...ivItems,
-    ...ttItems,
-    ...tnItems,
-    ...vnaItems,
-    ...vnvnItems
+  const crawlers = [
+    { name: 'VnExpress', fn: crawlVnExpress },
+    { name: 'Yonhap', fn: crawlYonhap },
+    { name: 'InsideVina', fn: crawlInsideVina },
+    { name: 'TuoiTre', fn: crawlTuoitre },
+    { name: 'ThanhNien', fn: crawlThanhNien },
+    { name: 'VNA', fn: crawlVnaNet },
+    { name: 'VnExpressVN', fn: crawlVnExpressVN }
   ];
-  console.log(`Total items found: ${allItems.length} `);
+
+  const results = await Promise.allSettled(crawlers.map(c => c.fn()));
+  
+  const allItems = [];
+  const successSources = [];
+  const failedSources = [];
+
+  results.forEach((result, index) => {
+    const crawler = crawlers[index];
+    if (result.status === 'fulfilled') {
+      allItems.push(...result.value);
+      successSources.push(`${crawler.name}(${result.value.length})`);
+      console.log(`✅ ${crawler.name}: ${result.value.length} items`);
+    } else {
+      failedSources.push(crawler.name);
+      console.error(`❌ ${crawler.name} failed:`, result.reason?.message || result.reason);
+    }
+  });
+
+  console.log(`Total items found: ${allItems.length} (${failedSources.length} sources failed)`);
 
   let savedCount = 0;
 
@@ -59,15 +67,21 @@ async function main() {
   }
 
   // Log run
+  const status = failedSources.length === 0 ? 'SUCCESS' : 
+                 failedSources.length === crawlers.length ? 'FAILED' : 'PARTIAL';
+  
   await prisma.crawlerLog.create({
     data: {
-      status: 'SUCCESS',
+      status,
       itemsFound: savedCount,
-      message: `Run completed. Sources: VnExpress(${vnItems.length}), Yonhap(${yhItems.length}), InsideVina(${ivItems.length}), TuoiTre(${ttItems.length}), ThanhNien(${tnItems.length}), VNA(${vnaItems.length}), VnExpressVN(${vnvnItems.length})`
+      message: `Run completed. Success: ${successSources.join(', ') || 'none'}. Failed: ${failedSources.join(', ') || 'none'}`
     }
   });
 
-  console.log(`🎉 Crawl finished. New items saved: ${savedCount} `);
+  console.log(`🎉 Crawl finished. New items saved: ${savedCount}`);
+  if (failedSources.length > 0) {
+    console.log(`⚠️ Failed sources: ${failedSources.join(', ')}`);
+  }
 }
 
 main()

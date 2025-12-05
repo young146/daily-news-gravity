@@ -45,7 +45,10 @@ export async function POST(request) {
             krw: String(krwRate)
         });
         
-        const imageResponse = await fetch(`http://127.0.0.1:5000/api/generate-card-image?${params.toString()}`);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                        process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` :
+                        'http://127.0.0.1:5000';
+        const imageResponse = await fetch(`${baseUrl}/api/generate-card-image?${params.toString()}`);
         
         if (!imageResponse.ok) {
             throw new Error(`Image generation failed: ${imageResponse.status}`);
