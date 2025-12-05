@@ -87,11 +87,12 @@ Single publication target on chaovietnam.co.kr:
 
 카드 엽서는 오늘의 주요 뉴스를 SNS 공유용으로 만든 시각적 카드입니다.
 
-### 디자인 (Simple Hero - 1200×800)
+### 디자인 (Simple Hero - 1200×630)
+- **OG 표준 규격** (1200×630) - SNS 공유에 최적화
 - **TopNews 1개만** 크게 표시 (SNS 썸네일에서도 잘 보임)
 - 상단: "Xin Chao Vietnam 오늘의 뉴스" + 날짜
-- 중앙: 큰 배경 이미지 + 제목(56px) + 요약
-- 하단: 로고 + 서울 날씨 + 환율 (USD, KRW)
+- 중앙: 전체 배경 이미지 + 제목(50px) + 요약
+- 하단: 물결 곡선 구분선 + 로고 + 서울 날씨 + 환율 (USD, KRW)
 
 ### 사용 방법
 1. 관리자 대시보드에서 뉴스 선택 후 **"Set as Top"** 클릭

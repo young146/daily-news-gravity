@@ -115,7 +115,7 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
     };
 
     return (
-        <div className={mode === 'print' ? "w-[1200px] h-[800px] overflow-hidden m-0 p-0" : "flex flex-col items-center py-8 px-4 min-h-screen"}>
+        <div className={mode === 'print' ? "w-[1200px] h-[630px] overflow-hidden m-0 p-0" : "flex flex-col items-center py-8 px-4 min-h-screen"}>
             <style jsx global>{`
                 @media print {
                     @page { size: landscape; margin: 0; }
@@ -139,12 +139,12 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                 className="relative overflow-hidden"
                 style={{ 
                     width: '1200px', 
-                    height: '800px', 
+                    height: '630px', 
                     backgroundColor: '#0f172a',
                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
                 }}
             >
-                {/* Background Image with Overlay */}
+                {/* Background Image with Overlay - Full Coverage */}
                 <div className="absolute inset-0">
                     {topNews?.imageUrl ? (
                         <img
@@ -162,7 +162,7 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                     <div 
                         className="absolute inset-0" 
                         style={{ 
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.85) 100%)' 
+                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%)' 
                         }} 
                     />
                 </div>
@@ -171,17 +171,17 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                 <div className="relative z-10 h-full flex flex-col">
                     
                     {/* Top Header Bar */}
-                    <div className="px-12 py-8 flex justify-between items-center">
+                    <div className="px-10 py-6 flex justify-between items-center">
                         <div className="flex items-center gap-6">
                             <div className="flex flex-col">
                                 <span 
-                                    className="font-serif italic text-4xl leading-none" 
+                                    className="font-serif italic text-3xl leading-none" 
                                     style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
                                 >
                                     Xin Chao Vietnam
                                 </span>
                                 <span 
-                                    className="text-lg font-bold tracking-[0.3em] uppercase mt-1" 
+                                    className="text-base font-bold tracking-[0.3em] uppercase mt-1" 
                                     style={{ color: '#fb923c' }}
                                 >
                                     오늘의 뉴스
@@ -189,7 +189,7 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                             </div>
                         </div>
                         <div 
-                            className="px-6 py-3 rounded-full text-lg font-bold"
+                            className="px-5 py-2 rounded-full text-base font-bold"
                             style={{ 
                                 color: '#ffffff', 
                                 backgroundColor: 'rgba(251, 146, 60, 0.9)',
@@ -201,11 +201,11 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                     </div>
 
                     {/* Main Content - Hero News */}
-                    <div className="flex-1 px-12 flex flex-col justify-center">
+                    <div className="flex-1 px-10 flex flex-col justify-center pb-24">
                         {/* Category Badge */}
                         {topNews?.category && (
                             <div 
-                                className="inline-block px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider mb-6 w-fit"
+                                className="inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-4 w-fit"
                                 style={{ 
                                     backgroundColor: '#fb923c', 
                                     color: '#ffffff',
@@ -218,11 +218,11 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                         
                         {/* Main Title */}
                         <h1 
-                            className="text-6xl font-black leading-tight mb-8 max-w-[1000px]"
+                            className="text-5xl font-black leading-tight mb-5 max-w-[1000px] line-clamp-2"
                             style={{ 
                                 color: '#ffffff', 
                                 textShadow: '0 4px 20px rgba(0,0,0,0.5)',
-                                lineHeight: '1.2'
+                                lineHeight: '1.25'
                             }}
                         >
                             {topNews?.translatedTitle || topNews?.title || "오늘의 주요 뉴스"}
@@ -230,7 +230,7 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                         
                         {/* Summary */}
                         <p 
-                            className="text-2xl leading-relaxed max-w-[900px] line-clamp-3"
+                            className="text-xl leading-relaxed max-w-[900px] line-clamp-2"
                             style={{ 
                                 color: '#e2e8f0', 
                                 textShadow: '0 2px 10px rgba(0,0,0,0.5)'
@@ -239,61 +239,61 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                             {topNews?.translatedSummary || topNews?.summary || ""}
                         </p>
                     </div>
+                </div>
 
-                    {/* Bottom Footer */}
-                    <div 
-                        className="px-12 py-6 flex justify-between items-center"
-                        style={{ 
-                            backgroundColor: 'rgba(255,255,255,0.95)',
-                            backdropFilter: 'blur(10px)'
-                        }}
-                    >
-                        {/* Logo */}
-                        <div className="flex items-center gap-4">
-                            <img src="/logo-full.png" alt="Xin Chao Vietnam" className="h-14 w-auto object-contain" />
+                {/* Wave Separator */}
+                <div className="absolute bottom-[70px] left-0 w-full z-20 leading-[0]">
+                    <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="w-full h-[50px]" style={{ fill: '#ffffff' }}>
+                        <path d="M0,30 C200,60 400,0 600,30 C800,60 1000,0 1200,30 L1200,60 L0,60 Z" />
+                    </svg>
+                    {/* Orange Accent Wave */}
+                    <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="absolute top-[-8px] left-0 w-full h-[50px] -z-10" style={{ fill: '#fb923c', opacity: 0.9 }}>
+                        <path d="M0,30 C200,60 400,0 600,30 C800,60 1000,0 1200,30 L1200,60 L0,60 Z" />
+                    </svg>
+                </div>
+
+                {/* Bottom Footer - White Band */}
+                <div 
+                    className="absolute bottom-0 left-0 right-0 h-[70px] px-10 flex justify-between items-center z-30"
+                    style={{ backgroundColor: '#ffffff' }}
+                >
+                    {/* Logo */}
+                    <div className="flex items-center gap-4">
+                        <img src="/logo-full.png" alt="Xin Chao Vietnam" className="h-10 w-auto object-contain" />
+                    </div>
+
+                    {/* Weather & Rates - Compact */}
+                    <div className="flex items-center gap-8">
+                        {/* Weather */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xl">{weather ? getWeatherIcon(weather.code) : '☀️'}</span>
+                            <div className="flex flex-col">
+                                <span className="text-xl font-black leading-none" style={{ color: '#0f172a' }}>
+                                    {weather?.temp ?? '--'}°C
+                                </span>
+                                <span className="text-xs font-medium" style={{ color: '#64748b' }}>Seoul</span>
+                            </div>
                         </div>
 
-                        {/* Weather & Rates */}
-                        <div className="flex items-center gap-10">
-                            {/* Weather */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-4xl">{weather ? getWeatherIcon(weather.code) : '☀️'}</span>
-                                <div className="flex flex-col">
-                                    <span className="text-3xl font-black leading-none" style={{ color: '#0f172a' }}>
-                                        {weather?.temp ?? '--'}°C
-                                    </span>
-                                    <span className="text-sm font-medium" style={{ color: '#64748b' }}>
-                                        Seoul
-                                    </span>
-                                </div>
-                            </div>
+                        <div className="w-px h-8" style={{ backgroundColor: '#e2e8f0' }}></div>
 
-                            <div className="w-px h-12" style={{ backgroundColor: '#cbd5e1' }}></div>
+                        {/* USD Rate */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ color: '#64748b', backgroundColor: '#f1f5f9' }}>USD</span>
+                            <span className="text-lg font-black" style={{ color: '#0f172a' }}>
+                                {rates?.usdVnd?.toLocaleString() ?? '---'}
+                            </span>
+                        </div>
 
-                            {/* USD Rate */}
-                            <div className="flex flex-col items-center">
-                                <span className="text-xs font-bold uppercase" style={{ color: '#94a3b8' }}>USD/VND</span>
-                                <span className="text-2xl font-black" style={{ color: '#0f172a' }}>
-                                    {rates?.usdVnd?.toLocaleString() ?? '---'}
-                                </span>
-                            </div>
-
-                            {/* KRW Rate */}
-                            <div className="flex flex-col items-center">
-                                <span className="text-xs font-bold uppercase" style={{ color: '#94a3b8' }}>KRW/VND</span>
-                                <span className="text-2xl font-black" style={{ color: '#0f172a' }}>
-                                    {rates?.krwVnd?.toLocaleString() ?? '---'}
-                                </span>
-                            </div>
+                        {/* KRW Rate */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ color: '#64748b', backgroundColor: '#f1f5f9' }}>KRW</span>
+                            <span className="text-lg font-black" style={{ color: '#0f172a' }}>
+                                {rates?.krwVnd?.toLocaleString() ?? '---'}
+                            </span>
                         </div>
                     </div>
                 </div>
-
-                {/* Decorative Orange Line */}
-                <div 
-                    className="absolute bottom-[88px] left-0 right-0 h-1"
-                    style={{ backgroundColor: '#fb923c' }}
-                />
             </div>
 
             {mode !== 'print' && (
