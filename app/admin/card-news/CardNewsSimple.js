@@ -13,11 +13,25 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
         if (!cardRef.current) return null;
         window.scrollTo(0, 0);
         
-        // Wait for fonts to load
+        // Explicitly load Korean fonts
+        try {
+            await document.fonts.load('400 16px "Noto Sans KR"');
+            await document.fonts.load('500 16px "Noto Sans KR"');
+            await document.fonts.load('700 16px "Noto Sans KR"');
+            await document.fonts.load('900 16px "Noto Sans KR"');
+        } catch (e) {
+            console.log('Font preload warning:', e);
+        }
+        
+        // Wait for all fonts to be ready
         if (document.fonts && document.fonts.ready) {
             await document.fonts.ready;
         }
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Disable font ligatures to prevent character corruption
+        const originalFontFeature = cardRef.current.style.fontFeatureSettings;
+        cardRef.current.style.fontFeatureSettings = '"liga" 0, "clig" 0';
 
         const html2canvas = (await import('html2canvas')).default;
         const images = cardRef.current.querySelectorAll('img');
@@ -46,18 +60,24 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
             scrollY: 0,
             windowWidth: 1200,
             windowHeight: 630,
+            imageTimeout: 15000,
             onclone: (clonedDoc) => {
-                // Force Noto Sans KR font in cloned document
+                // Force Noto Sans KR font and disable ligatures in cloned document
                 const style = clonedDoc.createElement('style');
                 style.textContent = `
-                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=block');
                     * { 
-                        font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif !important; 
+                        font-family: "Noto Sans KR", sans-serif !important;
+                        font-feature-settings: "liga" 0, "clig" 0 !important;
+                        -webkit-font-feature-settings: "liga" 0, "clig" 0 !important;
                     }
                 `;
                 clonedDoc.head.appendChild(style);
             }
         });
+
+        // Restore original font settings
+        cardRef.current.style.fontFeatureSettings = originalFontFeature;
 
         images.forEach((img, i) => {
             if (originalSrcs[i]) {
