@@ -5,6 +5,15 @@ import { useState } from 'react';
 export default function CardNewsSimple({ data, mode = 'preview' }) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [publishResult, setPublishResult] = useState(null);
+    
+    const now = new Date();
+    const vietnamTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const year = vietnamTime.getFullYear();
+    const month = vietnamTime.getMonth() + 1;
+    const day = vietnamTime.getDate();
+    const weekdays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+    const weekday = weekdays[vietnamTime.getDay()];
+    const dateStr = `${year}년 ${month}월 ${day}일 ${weekday}`;
 
     const handlePublishToWordPress = async () => {
         if (!confirm('카드 엽서를 WordPress에 게시하시겠습니까?')) return;
@@ -54,6 +63,14 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                     borderRadius: '12px'
                 }}
             >
+                <div style={{ 
+                    color: '#fb923c', 
+                    fontSize: '48px', 
+                    fontWeight: 'bold',
+                    marginBottom: '20px'
+                }}>
+                    {dateStr}
+                </div>
                 <h1 style={{ 
                     color: 'white', 
                     fontSize: '80px', 
