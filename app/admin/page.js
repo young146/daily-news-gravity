@@ -6,7 +6,7 @@ import { translateText, translateNewsItem } from '@/lib/openai';
 import CategorySelector from './category-selector';
 import GenerateButton from './generate-button';
 import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton, BatchTranslateTitlesButton } from './batch-actions';
-import TestAutoGenButton from './test-autogen-button';
+import CrawlNewsButton from './crawl-news-button';
 
 const prisma = new PrismaClient();
 
@@ -121,7 +121,7 @@ export default async function AdminPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Admin Dashboard</h1>
                 <div className="flex gap-2">
-                    <TestAutoGenButton />
+                    <CrawlNewsButton />
                     <form action={resetAllNews}>
                         <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition flex items-center gap-2" title="Delete ALL news items">
                             ⚠️ Hard Reset (Delete All)
