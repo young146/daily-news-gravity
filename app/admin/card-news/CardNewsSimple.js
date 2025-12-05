@@ -11,9 +11,11 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
     const year = vietnamTime.getFullYear();
     const month = vietnamTime.getMonth() + 1;
     const day = vietnamTime.getDate();
+    const hours = vietnamTime.getHours();
+    const minutes = vietnamTime.getMinutes().toString().padStart(2, '0');
     const weekdays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
     const weekday = weekdays[vietnamTime.getDay()];
-    const dateStr = `${year}년 ${month}월 ${day}일 ${weekday}`;
+    const dateStr = `${year}년 ${month}월 ${day}일 ${weekday} ${hours}:${minutes}`;
 
     const handlePublishToWordPress = async () => {
         if (!confirm('카드 엽서를 WordPress에 게시하시겠습니까?')) return;
