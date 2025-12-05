@@ -92,23 +92,9 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
         setPublishResult(null);
         
         try {
-            const canvas = await generateCanvas();
-            if (!canvas) {
-                throw new Error('이미지 생성에 실패했습니다');
-            }
-            
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-            
-            if (!blob) {
-                throw new Error('이미지 변환에 실패했습니다');
-            }
-            
-            const formData = new FormData();
-            formData.append('image', blob, 'card-news.jpg');
-            
             const response = await fetch('/api/publish-card-news', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' }
             });
             
             const result = await response.json();
