@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,12 @@ async function fetchWithRetry(url, options = {}, retries = 2) {
         try {
             return await axios.get(url, { 
                 timeout: 15000,
-                headers: { 'User-Agent': USER_AGENT },
+                headers: { 
+                    'User-Agent': USER_AGENT,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                    ...options.headers
+                },
                 ...options
             });
         } catch (e) {
@@ -20,10 +26,10 @@ async function fetchWithRetry(url, options = {}, retries = 2) {
     }
 }
 
-async function fetchDetailPage(url, contentSelectors, imageSelector = 'meta[property="og:image"]') {
+async function fetchDetailPage(url, contentSelectors, options = {}) {
     const cheerio = await import('cheerio');
     try {
-        const { data } = await fetchWithRetry(url);
+        const { data } = await fetchWithRetry(url, options);
         const $ = cheerio.load(data);
         
         let content = null;
@@ -32,7 +38,7 @@ async function fetchDetailPage(url, contentSelectors, imageSelector = 'meta[prop
             if (content) break;
         }
         
-        let imageUrl = $(imageSelector).attr('content') || $('meta[property="og:image"]').attr('content');
+        let imageUrl = $('meta[property="og:image"]').attr('content');
         if (!imageUrl) {
             const firstImg = $('article img, .content img, .fck_detail img').first().attr('src');
             if (firstImg) imageUrl = firstImg;
@@ -139,20 +145,36 @@ async function crawlVnExpressVN() {
 
 async function crawlYonhap() {
     const cheerio = await import('cheerio');
+    const axios = (await import('axios')).default;
     const items = [];
     try {
         console.log('Crawling Yonhap News...');
-        const { data } = await fetchWithRetry('https://www.yna.co.kr/international/asia-australia');
+        const { data } = await axios.get('https://www.yna.co.kr/international/asia-australia', {
+            timeout: 15000,
+            headers: { 
+                'User-Agent': USER_AGENT,
+                'Referer': 'https://www.yna.co.kr/',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'ko-KR,ko;q=0.9'
+            }
+        });
         const $ = cheerio.load(data);
         
         const listItems = [];
-        $('.list-type038 li, .list-type212 li').each((i, el) => {
-            if (i >= 6) return;
+        
+        $('.list-type038 li, .list-type212 li, .news-list li').each((i, el) => {
+            if (listItems.length >= 6) return;
             
-            const titleEl = $(el).find('.tit-news a, .news-tl a');
-            const title = titleEl.text().trim();
+            const titleEl = $(el).find('.tit-news a, .news-tl a, .tit a, a.tit-news').first();
+            let title = titleEl.text().trim();
             let link = titleEl.attr('href');
-            const summary = $(el).find('.lead').text().trim();
+            
+            if (!title) {
+                title = $(el).find('.tit-news, .news-tl').first().text().trim();
+                link = $(el).find('a').first().attr('href');
+            }
+            
+            const summary = $(el).find('.lead, .news-con').text().trim();
             
             if (title && link) {
                 if (!link.startsWith('http')) {
@@ -161,21 +183,37 @@ async function crawlYonhap() {
                 listItems.push({ title, summary, url: link });
             }
         });
+
+        console.log(`Yonhap list items found: ${listItems.length}`);
         
         for (const item of listItems) {
-            const detail = await fetchDetailPage(item.url, ['.article-txt', '.story-news', '.article']);
-            items.push({
-                title: item.title,
-                summary: item.summary || item.title,
-                content: detail.content,
-                originalUrl: item.url,
-                imageUrl: detail.imageUrl,
-                source: 'Yonhap News',
-                category: 'Korea-Vietnam',
-                publishedAt: new Date(),
-                status: 'DRAFT'
-            });
-            await new Promise(r => setTimeout(r, 500));
+            try {
+                const { data: detailData } = await axios.get(item.url, {
+                    timeout: 15000,
+                    headers: { 
+                        'User-Agent': USER_AGENT,
+                        'Referer': 'https://www.yna.co.kr/international/asia-australia'
+                    }
+                });
+                const $d = cheerio.load(detailData);
+                const content = $d('.article-txt').html() || $d('.story-news').html() || $d('.article').html();
+                const imageUrl = $d('meta[property="og:image"]').attr('content');
+                
+                items.push({
+                    title: item.title,
+                    summary: item.summary || item.title,
+                    content: content?.trim() || null,
+                    originalUrl: item.url,
+                    imageUrl: imageUrl || null,
+                    source: 'Yonhap News',
+                    category: 'Korea-Vietnam',
+                    publishedAt: new Date(),
+                    status: 'DRAFT'
+                });
+                await new Promise(r => setTimeout(r, 500));
+            } catch (e) {
+                console.error(`Yonhap detail failed: ${e.message}`);
+            }
         }
         console.log(`Yonhap: ${items.length} items`);
     } catch (e) {
@@ -186,43 +224,74 @@ async function crawlYonhap() {
 
 async function crawlInsideVina() {
     const cheerio = await import('cheerio');
+    const axios = (await import('axios')).default;
     const items = [];
     try {
         console.log('Crawling InsideVina...');
-        const { data } = await fetchWithRetry('https://www.insidevina.com/news/articleList.html?sc_section_code=S1N2');
+        const { data } = await axios.get('http://www.insidevina.com/news/articleList.html?sc_section_code=S1N1&view_type=sm', {
+            timeout: 15000,
+            headers: { 
+                'User-Agent': USER_AGENT,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Referer': 'http://www.insidevina.com/'
+            }
+        });
         const $ = cheerio.load(data);
         
         const listItems = [];
-        $('#section-list .article-list li, .type2 li, .ArtList li').each((i, el) => {
-            if (i >= 6) return;
+        
+        $('#section-list .article-list li, .type2 li, .ArtList li, ul.article-list > li').each((i, el) => {
+            if (listItems.length >= 6) return;
             
-            const titleEl = $(el).find('.titles a, .article-title a, a.tit');
-            const title = titleEl.text().trim();
+            const titleEl = $(el).find('.titles a, .article-title a, a.tit, .art-tit a').first();
+            let title = titleEl.text().trim();
             let link = titleEl.attr('href');
-            const summary = $(el).find('.sub-title, .article-summary').text().trim();
+            
+            if (!title) {
+                title = $(el).find('a').first().text().trim();
+                link = $(el).find('a').first().attr('href');
+            }
+            
+            const summary = $(el).find('.sub-title, .article-summary, .lead').text().trim();
             
             if (title && link) {
                 if (!link.startsWith('http')) {
-                    link = `https://www.insidevina.com${link}`;
+                    link = `http://www.insidevina.com${link}`;
                 }
                 listItems.push({ title, summary, url: link });
             }
         });
+
+        console.log(`InsideVina list items found: ${listItems.length}`);
         
         for (const item of listItems) {
-            const detail = await fetchDetailPage(item.url, ['#article-view-content-div', '.article-body', '.article-view-body']);
-            items.push({
-                title: item.title,
-                summary: item.summary || item.title,
-                content: detail.content,
-                originalUrl: item.url,
-                imageUrl: detail.imageUrl,
-                source: 'InsideVina',
-                category: 'Korea-Vietnam',
-                publishedAt: new Date(),
-                status: 'DRAFT'
-            });
-            await new Promise(r => setTimeout(r, 500));
+            try {
+                const { data: detailData } = await axios.get(item.url, {
+                    timeout: 15000,
+                    headers: { 
+                        'User-Agent': USER_AGENT,
+                        'Referer': 'http://www.insidevina.com/'
+                    }
+                });
+                const $d = cheerio.load(detailData);
+                const content = $d('#article-view-content-div').html() || $d('.article-body').html() || $d('.article-view-body').html();
+                const imageUrl = $d('meta[property="og:image"]').attr('content');
+                
+                items.push({
+                    title: item.title,
+                    summary: item.summary || item.title,
+                    content: content?.trim() || null,
+                    originalUrl: item.url,
+                    imageUrl: imageUrl ? (imageUrl.startsWith('http') ? imageUrl : `http://www.insidevina.com${imageUrl}`) : null,
+                    source: 'InsideVina',
+                    category: 'Korea-Vietnam',
+                    publishedAt: new Date(),
+                    status: 'DRAFT'
+                });
+                await new Promise(r => setTimeout(r, 500));
+            } catch (e) {
+                console.error(`InsideVina detail failed: ${e.message}`);
+            }
         }
         console.log(`InsideVina: ${items.length} items`);
     } catch (e) {
@@ -334,27 +403,41 @@ async function crawlThanhNien() {
 async function crawlVnaNet() {
     const cheerio = await import('cheerio');
     const https = await import('https');
+    const axios = (await import('axios')).default;
     const items = [];
     try {
         console.log('Crawling VNA...');
-        const agent = new https.Agent({ rejectUnauthorized: false });
-        const axios = (await import('axios')).default;
+        
+        const agent = new https.Agent({ 
+            rejectUnauthorized: false,
+            secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
+        });
         
         const { data } = await axios.get('https://vnanet.vn/vi/anh', { 
             timeout: 15000,
             httpsAgent: agent,
-            headers: { 'User-Agent': USER_AGENT }
+            headers: { 
+                'User-Agent': USER_AGENT,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
         });
         const $ = cheerio.load(data);
         
         const listItems = [];
-        $('.story-item, .box-news-item, article, .item-news').each((i, el) => {
+        
+        $('.story-item, .box-news-item, article, .item-news, .news-item').each((i, el) => {
             if (listItems.length >= 6) return;
             
-            const titleEl = $(el).find('h3 a, .title a, h2 a, a.story-title').first();
-            const title = titleEl.text().trim();
+            const titleEl = $(el).find('h3 a, .title a, h2 a, a.story-title, .story-heading a').first();
+            let title = titleEl.text().trim();
             let link = titleEl.attr('href');
-            const summary = $(el).find('.sapo, .description, .lead').text().trim();
+            
+            if (!title) {
+                title = $(el).find('a').first().text().trim();
+                link = $(el).find('a').first().attr('href');
+            }
+            
+            const summary = $(el).find('.sapo, .description, .lead, .story-summary').text().trim();
             
             if (title && link) {
                 if (!link.startsWith('http')) {
@@ -363,6 +446,8 @@ async function crawlVnaNet() {
                 listItems.push({ title, summary, url: link });
             }
         });
+
+        console.log(`VNA list items found: ${listItems.length}`);
         
         for (const item of listItems) {
             try {
@@ -372,7 +457,7 @@ async function crawlVnaNet() {
                     headers: { 'User-Agent': USER_AGENT }
                 });
                 const $d = cheerio.load(detailData);
-                const content = $d('.story-content, .article-content, .detail-content').html();
+                const content = $d('.story-content').html() || $d('.article-content').html() || $d('.detail-content').html();
                 const imageUrl = $d('meta[property="og:image"]').attr('content');
                 
                 items.push({
