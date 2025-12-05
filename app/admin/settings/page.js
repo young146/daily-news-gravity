@@ -586,6 +586,120 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      {/* 유지보수 가이드 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          🛠️ 크롤러 유지보수 가이드
+        </h2>
+        <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+          크롤러 오류 발생 시 참고하세요. 웹사이트 구조가 바뀌면 셀렉터 수정이 필요합니다.
+        </p>
+        
+        {/* 일반적인 에러 유형 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+            자주 발생하는 에러
+          </h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <ErrorGuide 
+              error="No content found" 
+              cause="웹사이트 HTML 구조 변경" 
+              solution="브라우저 개발자 도구(F12)로 새 셀렉터 찾기"
+            />
+            <ErrorGuide 
+              error="SSL_UNSAFE_LEGACY_RENEGOTIATION" 
+              cause="오래된 SSL 설정" 
+              solution="axios에 httpsAgent 옵션 추가 (vnanet.js 참고)"
+            />
+            <ErrorGuide 
+              error="403 Forbidden" 
+              cause="User-Agent 차단" 
+              solution="User-Agent 헤더 변경 또는 추가 헤더 설정"
+            />
+            <ErrorGuide 
+              error="ETIMEDOUT / ECONNRESET" 
+              cause="네트워크 문제 또는 서버 다운" 
+              solution="timeout 옵션 늘리기 또는 나중에 재시도"
+            />
+          </div>
+        </div>
+
+        {/* 셀렉터 위치 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+            크롤러별 셀렉터 위치
+          </h3>
+          <div style={{ 
+            background: '#f9fafb', 
+            borderRadius: '8px', 
+            overflow: 'hidden',
+            fontSize: '13px'
+          }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#e5e7eb' }}>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>크롤러</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>목록 셀렉터</th>
+                  <th style={{ padding: '10px', textAlign: 'left' }}>내용 셀렉터</th>
+                </tr>
+              </thead>
+              <tbody>
+                <SelectorRow name="VnExpress" list=".item-news" content=".fck_detail" />
+                <SelectorRow name="Yonhap" list=".list-type212 li" content=".article-txt" />
+                <SelectorRow name="InsideVina" list='a[href*="articleView"]' content="#article-view-content-div" />
+                <SelectorRow name="TuoiTre" list="h3 a, h2 a" content="#main-detail-body" />
+                <SelectorRow name="ThanhNien" list=".story" content=".detail-content" />
+                <SelectorRow name="VNA" list='a[href*=".html"]' content=".sample-grl" />
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 셀렉터 수정 방법 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+            셀렉터 수정 방법
+          </h3>
+          <ol style={{ 
+            paddingLeft: '24px', 
+            color: '#4b5563', 
+            lineHeight: '2',
+            fontSize: '14px'
+          }}>
+            <li>해당 뉴스 사이트 방문 (예: vnexpress.net)</li>
+            <li>F12 눌러 개발자 도구 열기</li>
+            <li>기사 제목/내용 영역 우클릭 → "검사" 또는 "Inspect"</li>
+            <li>요소 우클릭 → Copy → Copy selector</li>
+            <li>크롤러 파일에서 셀렉터 수정</li>
+            <li>테스트: <code style={{ background: '#e5e7eb', padding: '2px 6px', borderRadius: '4px' }}>node -e "require('./scripts/crawlers/vnexpress')().then(console.log)"</code></li>
+          </ol>
+        </div>
+
+        {/* AI 도구 활용 */}
+        <div style={{ 
+          background: '#eff6ff', 
+          padding: '16px', 
+          borderRadius: '8px',
+          border: '1px solid #bfdbfe'
+        }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#1e40af' }}>
+            💡 AI 도구 활용 팁
+          </h3>
+          <p style={{ color: '#1e40af', fontSize: '13px', margin: 0 }}>
+            수정이 어려우면 Claude나 ChatGPT에 다음 정보를 제공하세요:<br/>
+            1) 에러 메시지 전체<br/>
+            2) 해당 크롤러 파일 코드<br/>
+            3) 대상 웹사이트 URL
+          </p>
+        </div>
+      </section>
+
       {/* 일일 워크플로우 */}
       <section style={{ 
         background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', 
@@ -646,6 +760,37 @@ function TableRow({ label, value, link }) {
           </a>
         ) : value}
       </td>
+    </tr>
+  );
+}
+
+function ErrorGuide({ error, cause, solution }) {
+  return (
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: '1fr 1fr 2fr',
+      gap: '12px',
+      padding: '12px',
+      background: '#fef2f2',
+      borderRadius: '8px',
+      border: '1px solid #fecaca',
+      fontSize: '13px'
+    }}>
+      <div>
+        <div style={{ color: '#991b1b', fontWeight: '600' }}>{error}</div>
+      </div>
+      <div style={{ color: '#7f1d1d' }}>{cause}</div>
+      <div style={{ color: '#166534' }}>{solution}</div>
+    </div>
+  );
+}
+
+function SelectorRow({ name, list, content }) {
+  return (
+    <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+      <td style={{ padding: '8px 10px', fontWeight: '500' }}>{name}</td>
+      <td style={{ padding: '8px 10px', fontFamily: 'monospace', color: '#7c3aed' }}>{list}</td>
+      <td style={{ padding: '8px 10px', fontFamily: 'monospace', color: '#059669' }}>{content}</td>
     </tr>
   );
 }
