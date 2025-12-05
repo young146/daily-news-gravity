@@ -135,6 +135,10 @@ Single publication target on chaovietnam.co.kr:
   - 개별 소스 실패 시에도 다른 소스 크롤링 계속
   - 실패/성공 소스 로그에 상세 기록
   - 상태 표시: SUCCESS | PARTIAL | FAILED
+- **크롤러 에러 추적 기능**: 실패 이유 상세 저장 및 조회
+  - `CrawlerLog.errorDetails` 필드 추가 (JSON)
+  - 설정 페이지에서 에러 상세 확인 가능 (클릭하여 펼치기)
+  - 에러 메시지, 스택 트레이스, 발생 시간 기록
 
 ### Earlier (Dec 5)
 - **카드 엽서 새 디자인**: Simple Hero 스타일 (1200×630)
