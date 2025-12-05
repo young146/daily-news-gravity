@@ -10,7 +10,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-function jenny_get_weather_data() {
+function jenny_get_weather_html() {
+    $cities = array(
+        array( 'name' => '하노이', 'id' => 'hanoi' ),
+        array( 'name' => '호치민', 'id' => 'hochiminh' ),
+        array( 'name' => '서울', 'id' => 'seoul' ),
+    );
+    
+    $output = '';
+    foreach ( $cities as $city ) {
+        $shortcode = '[starter_starter_starter id="' . $city['id'] . '"]';
+        $weather_output = do_shortcode( $shortcode );
+        if ( ! empty( $weather_output ) && $weather_output !== $shortcode ) {
+            $output .= '<div class="jenny-city-weather">' . $weather_output . '</div>';
+        }
+    }
+    
+    if ( empty( $output ) ) {
+        $output = jenny_get_weather_fallback();
+    }
+    
+    return $output;
+}
+
+function jenny_get_weather_fallback() {
     $cache_key = 'jenny_weather_data';
     $cached = get_transient( $cache_key );
     if ( $cached !== false ) {
@@ -23,27 +46,23 @@ function jenny_get_weather_data() {
         'seoul' => array( 'name' => '서울', 'query' => 'Seoul' ),
     );
 
-    $weather_data = array();
+    $output = '';
     foreach ( $cities as $key => $city ) {
         $url = 'https://wttr.in/' . $city['query'] . '?format=%t&m';
         $response = wp_remote_get( $url, array( 'timeout' => 5 ) );
+        $temp = '-';
         if ( ! is_wp_error( $response ) ) {
             $temp = trim( wp_remote_retrieve_body( $response ) );
             $temp = str_replace( '+', '', $temp );
-            $weather_data[ $key ] = array(
-                'name' => $city['name'],
-                'temp' => $temp,
-            );
-        } else {
-            $weather_data[ $key ] = array(
-                'name' => $city['name'],
-                'temp' => '-',
-            );
         }
+        $output .= '<div class="jenny-weather-chip">';
+        $output .= '<span class="jenny-chip-city">' . esc_html( $city['name'] ) . '</span>';
+        $output .= '<span class="jenny-chip-temp">' . esc_html( $temp ) . '</span>';
+        $output .= '</div>';
     }
 
-    set_transient( $cache_key, $weather_data, 30 * MINUTE_IN_SECONDS );
-    return $weather_data;
+    set_transient( $cache_key, $output, 30 * MINUTE_IN_SECONDS );
+    return $output;
 }
 
 function jenny_get_exchange_data() {
@@ -54,22 +73,21 @@ function jenny_get_exchange_data() {
     }
 
     $exchange_data = array(
-        'usd' => '-',
-        'krw' => '-',
+        'usd' => '25,400',
+        'krw_100' => '1,780',
     );
 
-    $url = 'https://open.er-api.com/v6/latest/VND';
+    $url = 'https://open.er-api.com/v6/latest/USD';
     $response = wp_remote_get( $url, array( 'timeout' => 5 ) );
     if ( ! is_wp_error( $response ) ) {
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( isset( $body['rates'] ) ) {
-            if ( isset( $body['rates']['USD'] ) ) {
-                $usd_rate = 1 / $body['rates']['USD'];
-                $exchange_data['usd'] = number_format( $usd_rate, 0 );
+            if ( isset( $body['rates']['VND'] ) ) {
+                $exchange_data['usd'] = number_format( $body['rates']['VND'], 0 );
             }
-            if ( isset( $body['rates']['KRW'] ) ) {
-                $krw_rate = 1 / $body['rates']['KRW'];
-                $exchange_data['krw'] = number_format( $krw_rate, 2 );
+            if ( isset( $body['rates']['KRW'] ) && isset( $body['rates']['VND'] ) ) {
+                $krw_to_vnd = $body['rates']['VND'] / $body['rates']['KRW'] * 100;
+                $exchange_data['krw_100'] = number_format( $krw_to_vnd, 0 );
             }
         }
     }
@@ -146,25 +164,44 @@ function jenny_daily_news_shortcode( $atts ) {
 
     $page_url = get_permalink();
     
-    $weather = jenny_get_weather_data();
     $exchange = jenny_get_exchange_data();
     
     $output = '<div class="jenny-date-filter">';
-    $output .= '<div class="jenny-filter-row">';
     
-    $output .= '<div class="jenny-info-section">';
-    $output .= '<div class="jenny-weather-box">';
-    $output .= '<span class="jenny-info-label">날씨</span>';
-    foreach ( $weather as $city ) {
-        $output .= '<span class="jenny-weather-item">' . esc_html( $city['name'] ) . ' ' . esc_html( $city['temp'] ) . '</span>';
-    }
+    $output .= '<div class="jenny-info-bar">';
+    
+    $output .= '<div class="jenny-info-card jenny-weather-card">';
+    $output .= '<div class="jenny-card-header">';
+    $output .= '<span class="jenny-card-icon">🌤</span>';
+    $output .= '<span class="jenny-card-title">오늘의 날씨</span>';
     $output .= '</div>';
-    $output .= '<div class="jenny-exchange-box">';
-    $output .= '<span class="jenny-info-label">환율</span>';
-    $output .= '<span class="jenny-exchange-item">USD ' . esc_html( $exchange['usd'] ) . '₫</span>';
-    $output .= '<span class="jenny-exchange-item">KRW ' . esc_html( $exchange['krw'] ) . '₫</span>';
+    $output .= '<div class="jenny-card-chips">';
+    $output .= jenny_get_weather_fallback();
     $output .= '</div>';
     $output .= '</div>';
+    
+    $output .= '<div class="jenny-info-card jenny-fx-card">';
+    $output .= '<div class="jenny-card-header">';
+    $output .= '<span class="jenny-card-icon">💱</span>';
+    $output .= '<span class="jenny-card-title">환율</span>';
+    $output .= '</div>';
+    $output .= '<div class="jenny-card-chips">';
+    $output .= '<div class="jenny-fx-chip">';
+    $output .= '<span class="jenny-fx-flag">🇺🇸</span>';
+    $output .= '<span class="jenny-fx-label">1 USD</span>';
+    $output .= '<span class="jenny-fx-value">' . esc_html( $exchange['usd'] ) . '₫</span>';
+    $output .= '</div>';
+    $output .= '<div class="jenny-fx-chip">';
+    $output .= '<span class="jenny-fx-flag">🇰🇷</span>';
+    $output .= '<span class="jenny-fx-label">100 KRW</span>';
+    $output .= '<span class="jenny-fx-value">' . esc_html( $exchange['krw_100'] ) . '₫</span>';
+    $output .= '</div>';
+    $output .= '</div>';
+    $output .= '</div>';
+    
+    $output .= '</div>';
+    
+    $output .= '<div class="jenny-filter-row">';
     
     if ( $is_filtered ) {
         $output .= '<a href="' . esc_url( $page_url ) . '" class="jenny-filter-btn">오늘의 뉴스</a>';
@@ -268,50 +305,104 @@ function jenny_get_styles() {
         .jenny-date-filter {
             margin-bottom: 24px;
             padding: 16px 0;
-            border-bottom: 1px solid #e5e7eb;
+        }
+        .jenny-info-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .jenny-info-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .jenny-info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        .jenny-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .jenny-card-icon {
+            font-size: 20px;
+        }
+        .jenny-card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .jenny-card-chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .jenny-weather-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+        }
+        .jenny-chip-city {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .jenny-chip-temp {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ea580c;
+        }
+        .jenny-fx-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+        }
+        .jenny-fx-flag {
+            font-size: 18px;
+        }
+        .jenny-fx-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .jenny-fx-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #059669;
+        }
+        @media (max-width: 768px) {
+            .jenny-info-bar {
+                flex-direction: column;
+            }
+            .jenny-info-card {
+                width: 100%;
+            }
         }
         .jenny-filter-row {
             display: flex;
             gap: 12px;
             align-items: center;
             flex-wrap: wrap;
-        }
-        .jenny-info-section {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            margin-right: auto;
-        }
-        .jenny-weather-box,
-        .jenny-exchange-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: #374151;
-        }
-        .jenny-info-label {
-            font-weight: 700;
-            color: #ea580c;
-            padding: 4px 8px;
-            background: #fef3c7;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .jenny-weather-item,
-        .jenny-exchange-item {
-            padding: 4px 8px;
-            background: #f3f4f6;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-        @media (max-width: 768px) {
-            .jenny-info-section {
-                width: 100%;
-                margin-bottom: 8px;
-                flex-wrap: wrap;
-            }
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
         }
         .jenny-filter-btn {
             display: inline-block;
