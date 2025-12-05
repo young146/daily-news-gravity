@@ -21,21 +21,24 @@ Automated news workflow system for XinChao Vietnam, a 23-year-old Korean-languag
 - VNA
 
 ### WordPress Publishing
-Two publication targets on chaovietnam.co.kr:
+Single publication target on chaovietnam.co.kr:
 
 | Target | Category IDs | Description |
 |--------|-------------|-------------|
 | 데일리뉴스 (Full Article) | 6, 31 | Complete translated articles |
-| 데일리뉴스 요약본 (Summary) | 6, 711 | AI-generated summaries for news terminal |
+
+**참고**: 요약본(카테고리 711) 별도 게시 삭제됨. Jenny 플러그인이 본문에서 직접 excerpt를 가져옴.
 
 ### WordPress Plugins (Required)
 1. **XinChao Image Uploader** (`xinchao-image-uploader.php`)
    - REST endpoint for server-side image download
    - Bypasses hotlink protection from news sites
    
-2. **Jenny Daily News Display** (`jenny-daily-news.php`) v1.1
-   - Displays summary cards using `[daily_news_list]` shortcode
-   - Links directly to full article (via `full_article_url` meta)
+2. **Jenny Daily News Display** (`jenny-daily-news.php`) v1.3
+   - Displays news cards using `[daily_news_list]` shortcode
+   - Fetches from category 31 (본문)
+   - Uses WordPress excerpt for summary
+   - Links directly to full article (permalink)
 
 ## Key Files
 
@@ -53,13 +56,10 @@ Two publication targets on chaovietnam.co.kr:
 1. **Crawl** → Fetch news from sources (8am daily)
 2. **Select** → Admin selects ~20 articles
 3. **Translate** → GPT translates to Korean
-4. **Publish Main** → Full article to 데일리뉴스 (category 31)
+4. **Publish** → Full article to 데일리뉴스 (category 31)
    - Image uploaded to WordPress Media Library
    - Featured image set
-5. **Publish Summary** → Summary to 요약본 (category 711)
-   - Reuses uploaded image (no duplicate upload)
-   - Featured image set for Jenny plugin
-   - `full_article_url` meta saved for direct linking
+   - Jenny plugin reads from this category directly
 
 ## Image Handling
 
@@ -122,13 +122,13 @@ Two publication targets on chaovietnam.co.kr:
 2. `/admin/card-news` 페이지에서 **"WordPress에 카드 엽서 게시"** 클릭
 3. SNS에서 뉴스 터미널 URL 공유
 
-## Recent Changes (Dec 4, 2025)
+## Recent Changes (Dec 5, 2025)
 
-- Added `wordpressMediaId` field to database for image reuse
-- Summary posts now reuse uploaded image (no duplicate upload)
-- Summary posts have Featured Image set for Jenny plugin
-- Added `full_article_url` custom field for direct article linking
-- Jenny plugin v1.1: Cards link directly to full article
+- **요약본 게시 제거**: 본문만 WordPress에 게시 (카테고리 31)
+- **Jenny 플러그인 v1.3**: 본문(31)에서 직접 가져오고, excerpt 사용, permalink로 링크
+- **게시 로직 단순화**: `publishToDailySite` 제거, 본문 하나만 게시
+
+### Dec 4, 2025
 - **Yonhap SSL fix**: Images downloaded via Replit first, then uploaded to WordPress
 - **VNA crawler fix**: SSL legacy support enabled
 - **Card News WordPress 게시**: 카드 엽서를 WordPress에 직접 게시하는 기능 추가
@@ -139,6 +139,4 @@ Two publication targets on chaovietnam.co.kr:
 ## Notes
 
 - All 7 news sources now working with images
-- Existing summary posts (before Dec 4) still link to summary pages
-- New summary posts link directly to full articles
 - Card news uses client-side html2canvas for image generation (Puppeteer not available)
