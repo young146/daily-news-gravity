@@ -4,23 +4,24 @@
  * Description: Displays daily news in a beautiful card layout using the shortcode [daily_news_list]. Shows excerpt and links to full article.
  * Version: 1.3
  * Author: Jenny (Antigravity)
+ * Requires PHP: 5.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Register custom meta fields for REST API
-add_action( 'init', function() {
-    register_post_meta( 'post', 'news_category', array(
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'string',
-        'auth_callback' => function() {
-            return current_user_can( 'edit_posts' );
-        }
-    ));
-});
+// Register custom meta fields for REST API (only if function exists - WP 4.9.8+)
+function jenny_register_meta_fields() {
+    if ( function_exists( 'register_post_meta' ) ) {
+        register_post_meta( 'post', 'news_category', array(
+            'show_in_rest' => true,
+            'single' => true,
+            'type' => 'string',
+        ));
+    }
+}
+add_action( 'init', 'jenny_register_meta_fields' );
 
 function jenny_daily_news_shortcode( $atts ) {
     $atts = shortcode_atts( array(
