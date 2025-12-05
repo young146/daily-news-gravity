@@ -82,6 +82,8 @@ Single publication target on chaovietnam.co.kr:
 | `WORDPRESS_URL` | WordPress site URL (default: https://chaovietnam.co.kr) |
 | `WORDPRESS_USERNAME` | WordPress username (default: chaovietnam) |
 | `DATABASE_URL` | SQLite database path |
+| `TELEGRAM_BOT_TOKEN` | (선택) 텔레그램 봇 토큰 |
+| `TELEGRAM_CHAT_ID` | (선택) 텔레그램 채팅 ID |
 
 ## Card News (카드 엽서)
 
@@ -158,7 +160,30 @@ Single publication target on chaovietnam.co.kr:
 - **뉴스 터미널 대표이미지**: 카드 엽서가 뉴스 터미널 페이지의 Featured Image로 설정
 - **SNS 공유 성공**: Facebook, 카카오톡, Zalo 모두 OG 이미지 표시 확인
 
+## Documentation
+
+| 문서 | 설명 |
+|------|------|
+| `docs/CRAWLER_MAINTENANCE.md` | 크롤러 유지보수 가이드 (셀렉터 수정, 에러 해결) |
+| `docs/VPS_DEPLOYMENT.md` | VPS 배포 가이드 (PM2, Nginx, Cron 설정) |
+
+## Telegram Notifications
+
+크롤러 실행 결과를 텔레그램으로 알림 받을 수 있습니다.
+
+### 설정 방법
+1. `@BotFather`에서 봇 생성 → 토큰 저장
+2. 봇에게 `/start` 메시지 전송
+3. `https://api.telegram.org/bot[TOKEN]/getUpdates`에서 chat_id 확인
+4. 환경변수 설정: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+
+### 알림 내용
+- 크롤러 실행 결과 (성공/부분실패/실패)
+- 저장된 뉴스 개수
+- 실패한 소스 및 에러 메시지
+
 ## Notes
 
 - All 7 news sources now working with images
 - Card news uses client-side html2canvas for image generation (Puppeteer not available)
+- Telegram notifications are optional (works without configuration)
