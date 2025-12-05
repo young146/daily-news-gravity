@@ -7,10 +7,46 @@ export default function SettingsPage() {
   const [crawlStatus, setCrawlStatus] = useState({});
   const [systemInfo, setSystemInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [publishedNews, setPublishedNews] = useState([]);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchSystemInfo();
+    fetchPublishedNews();
   }, []);
+
+  const fetchPublishedNews = async () => {
+    try {
+      const res = await fetch('/api/published-news');
+      const data = await res.json();
+      setPublishedNews(data.news || []);
+    } catch (error) {
+      console.error('Failed to fetch published news:', error);
+    }
+  };
+
+  const deletePublishedNews = async (id, title) => {
+    if (!confirm(`정말 삭제하시겠습니까?\n\n"${title}"\n\n※ WordPress에서는 별도로 삭제해야 합니다.`)) {
+      return;
+    }
+    
+    setDeletingId(id);
+    try {
+      const res = await fetch('/api/published-news', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        setPublishedNews(prev => prev.filter(n => n.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete:', error);
+      alert('삭제 실패: ' + error.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const fetchSystemInfo = async () => {
     try {
@@ -155,6 +191,93 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* 발행된 뉴스 관리 */}
+      <section style={{ 
+        background: 'white', 
+        padding: '24px', 
+        borderRadius: '12px', 
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#1f2937' }}>
+          🗑️ 발행된 뉴스 관리
+        </h2>
+        <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+          이미 발행된 뉴스를 DB에서 삭제할 수 있습니다. (WordPress 글은 별도 삭제 필요)
+        </p>
+        
+        {publishedNews.length === 0 ? (
+          <p style={{ color: '#9ca3af', textAlign: 'center', padding: '20px' }}>
+            발행된 뉴스가 없습니다.
+          </p>
+        ) : (
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>제목</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '80px' }}>소스</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '100px' }}>발행일</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '80px' }}>WP ID</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', width: '60px' }}>삭제</th>
+                </tr>
+              </thead>
+              <tbody>
+                {publishedNews.map(news => (
+                  <tr key={news.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '10px' }}>
+                      <div style={{ fontWeight: '500', color: '#1f2937' }}>
+                        {news.translatedTitle || news.title}
+                      </div>
+                      {news.translatedTitle && (
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                          {news.title?.substring(0, 50)}...
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#6b7280' }}>
+                      {news.source}
+                    </td>
+                    <td style={{ padding: '10px', textAlign: 'center', color: '#6b7280' }}>
+                      {new Date(news.updatedAt).toLocaleDateString('ko-KR')}
+                    </td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>
+                      {news.wordpressUrl ? (
+                        <a 
+                          href={news.wordpressUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: '#3b82f6', textDecoration: 'underline' }}
+                        >
+                          보기
+                        </a>
+                      ) : '-'}
+                    </td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>
+                      <button
+                        onClick={() => deletePublishedNews(news.id, news.translatedTitle || news.title)}
+                        disabled={deletingId === news.id}
+                        style={{
+                          padding: '4px 10px',
+                          background: deletingId === news.id ? '#9ca3af' : '#fee2e2',
+                          color: deletingId === news.id ? 'white' : '#991b1b',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: deletingId === news.id ? 'not-allowed' : 'pointer',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {deletingId === news.id ? '...' : '🗑️'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* 시스템 정보 */}

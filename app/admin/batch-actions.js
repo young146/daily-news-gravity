@@ -187,7 +187,7 @@ These will NOT be published now. You can review them later.
                 type="button"
                 onClick={handleAction}
                 disabled={isPending}
-                className="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2 font-bold animate-pulse"
+                className="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2 font-bold"
             >
                 {isPending ? 'Translating & Generating...' : '🚀 Translate & Generate (Selected Items Only)'}
             </button>

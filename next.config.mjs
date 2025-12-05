@@ -22,6 +22,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.tuoitre.vn' },
       { protocol: 'https', hostname: 'image.thanhnien.vn' },
       { protocol: 'https', hostname: 'cdn.vnanet.vn' },
+      { protocol: 'https', hostname: 'vnanet.vn' },
       { protocol: 'https', hostname: 'via.placeholder.com' },
       { protocol: 'https', hostname: 'cdn.insidevina.com' },
       { protocol: 'https', hostname: 'images2.thanhnien.vn' },
