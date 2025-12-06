@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Jenny Daily News Display
  * Description: Displays daily news in a beautiful card layout using the shortcode [daily_news_list]. Shows excerpt and links to full article. Includes weather and exchange rate info.
- * Version: 1.5
+ * Version: 1.6
  * Author: Jenny (Antigravity)
  */
 
@@ -122,7 +122,7 @@ add_action( 'init', 'jenny_register_meta_fields' );
 
 function jenny_daily_news_shortcode( $atts ) {
     $atts = shortcode_atts( array(
-        'count' => 12,
+        'count' => -1,
         'category' => 31,
     ), $atts );
 
@@ -132,26 +132,29 @@ function jenny_daily_news_shortcode( $atts ) {
     }
     $is_filtered = ( $selected_date !== '' );
 
+    // 오늘 날짜 (WordPress 타임존 기준)
+    $today = current_time( 'Y-m-d' );
+
     $args = array(
         'post_type' => 'post',
-        'posts_per_page' => $is_filtered ? 50 : intval( $atts['count'] ),
+        'posts_per_page' => -1,
         'cat' => intval( $atts['category'] ),
         'post_status' => 'publish',
         'orderby' => 'date',
         'order' => 'DESC',
     );
 
-    if ( $is_filtered ) {
-        $date_parts = explode( '-', $selected_date );
-        if ( count( $date_parts ) === 3 ) {
-            $args['date_query'] = array(
-                array(
-                    'year'  => intval( $date_parts[0] ),
-                    'month' => intval( $date_parts[1] ),
-                    'day'   => intval( $date_parts[2] ),
-                ),
-            );
-        }
+    // 날짜 필터 적용 (선택된 날짜 또는 오늘)
+    $filter_date = $is_filtered ? $selected_date : $today;
+    $date_parts = explode( '-', $filter_date );
+    if ( count( $date_parts ) === 3 ) {
+        $args['date_query'] = array(
+            array(
+                'year'  => intval( $date_parts[0] ),
+                'month' => intval( $date_parts[1] ),
+                'day'   => intval( $date_parts[2] ),
+            ),
+        );
     }
 
     $query = new WP_Query( $args );
