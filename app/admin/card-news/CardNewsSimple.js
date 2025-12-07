@@ -137,7 +137,14 @@ export default function CardNewsSimple({ data, mode = 'preview' }) {
                                         onClick={() => {
                                             const dateParam = `${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
                                             const shareUrl = `https://chaovietnam.co.kr/daily-news-terminal/?v=${dateParam}`;
-                                            navigator.clipboard.writeText(shareUrl);
+                                           const textArea = document.createElement('textarea');
+                                                 textArea.value = shareUrl;
+                                                 textArea.style.position = 'fixed';
+                                                 textArea.style.left = '-9999px';
+                                                 document.body.appendChild(textArea);
+                                                 textArea.select();
+                                                 document.execCommand('copy');
+                                                 document.body.removeChild(textArea);
                                             const btn = document.getElementById('copy-success-msg');
                                             if (btn) {
                                                 btn.textContent = '✅ 복사됨!';
