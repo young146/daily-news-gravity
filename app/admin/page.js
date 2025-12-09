@@ -7,6 +7,7 @@ import CategorySelector from './category-selector';
 import GenerateButton from './generate-button';
 import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton, BatchTranslateTitlesButton } from './batch-actions';
 import CrawlNewsButton from './crawl-news-button';
+import CollectedNewsList from './collected-news-list';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,50 +136,11 @@ export default async function AdminPage() {
                             <BatchTranslateTitlesButton ids={selectionPark.filter(n => !n.translatedTitle).map(n => n.id)} />
                         )}
                     </div>
-                    <div className="border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="font-semibold">Total Items</span>
-                            <span className="text-sm font-normal bg-gray-200 px-2 py-1 rounded">{selectionPark.length} items</span>
-                        </div>
-                        <div className="space-y-4 h-[80vh] overflow-y-auto pr-2">
-                            {selectionPark.map(item => (
-                                <div key={item.id} className="bg-white p-4 rounded shadow-sm border border-gray-200">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-xs font-bold text-blue-600 uppercase">{item.source}</span>
-                                        <span className="text-xs text-gray-500">{new Date(item.publishedAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <h3 className="font-medium text-gray-900 mb-2">
-                                        <Link href={`/admin/news/${item.id}/translate`} className="hover:text-blue-600 hover:underline">
-                                            {item.translatedTitle || item.title}
-                                        </Link>
-                                        {item.translatedTitle && <span className="block text-xs text-gray-500 font-normal mt-1">{item.title}</span>}
-                                    </h3>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <div className="w-40">
-                                            <CategorySelector id={item.id} initialCategory={item.category} />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <form action={deleteNewsItem}>
-                                                <input type="hidden" name="id" value={item.id} />
-                                                <button type="submit" className="text-sm bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-red-100 hover:text-red-600 transition" title="Delete">
-                                                    🗑️
-                                                </button>
-                                            </form>
-                                            <form action={addToTop}>
-                                                <input type="hidden" name="id" value={item.id} />
-                                                <button type="submit" className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
-                                                    Select →
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            {selectionPark.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">No new items found. Run crawler to fetch news.</p>
-                            )}
-                        </div>
-                    </div>
+                    <CollectedNewsList 
+                        items={selectionPark} 
+                        addToTopAction={addToTop} 
+                        deleteNewsItemAction={deleteNewsItem} 
+                    />
                 </div>
 
                 {/* Right Column: Top News */}

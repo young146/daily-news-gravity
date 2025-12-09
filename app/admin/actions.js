@@ -235,3 +235,16 @@ export async function batchPublishDailyAction(ids) {
         return { success: false, error: error.message };
     }
 }
+
+export async function batchDeleteAction(ids) {
+    try {
+        await prisma.newsItem.deleteMany({
+            where: { id: { in: ids } }
+        });
+        revalidatePath('/admin');
+        return { success: true, deletedCount: ids.length };
+    } catch (error) {
+        console.error('Batch delete failed:', error);
+        return { success: false, error: error.message };
+    }
+}
