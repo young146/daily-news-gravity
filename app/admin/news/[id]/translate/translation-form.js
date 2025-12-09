@@ -170,22 +170,24 @@ export default function TranslationForm({ newsItem, nextId }) {
                     >
                         Save Draft (임시 저장)
                     </button>
-                    {nextId && (
-                        <button
-                            type="button"
-                            onClick={async (e) => {
-                                e.preventDefault();
-                                if (confirm('Skip this item for now? It will be marked as SKIPPED.')) {
-                                    const { skipItemAction } = await import('./actions');
-                                    await skipItemAction(newsItem.id);
+                    <button
+                        type="button"
+                        onClick={async (e) => {
+                            e.preventDefault();
+                            if (confirm('Skip this item? It will be unselected and moved back to Collected News.')) {
+                                const { skipItemAction } = await import('./actions');
+                                await skipItemAction(newsItem.id);
+                                if (nextId) {
                                     router.push(`/admin/news/${nextId}/translate`);
+                                } else {
+                                    router.push('/admin');
                                 }
-                            }}
-                            className="bg-gray-100 text-gray-600 px-4 py-3 rounded hover:bg-gray-200 font-medium"
-                        >
-                            Skip to Next →
-                        </button>
-                    )}
+                            }
+                        }}
+                        className="bg-gray-100 text-gray-600 px-4 py-3 rounded hover:bg-gray-200 font-medium"
+                    >
+                        {nextId ? 'Skip to Next →' : 'Skip & Back ←'}
+                    </button>
                     <button
                         onClick={handlePreview}
                         className="flex-1 bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-medium flex items-center justify-center gap-2"
