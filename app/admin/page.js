@@ -8,6 +8,8 @@ import GenerateButton from './generate-button';
 import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton, BatchTranslateTitlesButton } from './batch-actions';
 import CrawlNewsButton from './crawl-news-button';
 
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 async function getNews() {
