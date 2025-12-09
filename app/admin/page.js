@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { translateText, translateNewsItem } from '@/lib/openai';
 import CategorySelector from './category-selector';
 import GenerateButton from './generate-button';
-import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton, BatchTranslateTitlesButton } from './batch-actions';
+import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton } from './batch-actions';
 import CrawlNewsButton from './crawl-news-button';
 import CollectedNewsList from './collected-news-list';
 
@@ -132,9 +132,6 @@ export default async function AdminPage() {
                 <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center">
                         <h2 className="text-lg font-bold text-gray-700">Collected News</h2>
-                        {selectionPark.length > 0 && (
-                            <BatchTranslateTitlesButton ids={selectionPark.filter(n => !n.translatedTitle).map(n => n.id)} />
-                        )}
                     </div>
                     <CollectedNewsList 
                         items={selectionPark} 

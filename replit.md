@@ -157,7 +157,15 @@ Single publication target on chaovietnam.co.kr:
 2. `/admin/card-news` 페이지에서 **"WordPress에 카드 엽서 게시"** 클릭
 3. SNS에서 뉴스 터미널 URL 공유
 
-## Recent Changes (Dec 5, 2025)
+## Recent Changes (Dec 9, 2025)
+
+### Crawler Title Translation
+- **크롤러에서 제목 자동 번역**: 뉴스 수집 시 GPT-4o-mini로 제목을 한국어로 번역
+- 연합뉴스(Yonhap)는 이미 한글이므로 번역 스킵
+- **Translate Titles 버튼 제거**: 더 이상 필요 없음
+- Collected News에 번역된 제목 표시, 원문은 아래에 작게 표시
+
+## Previous Changes (Dec 5, 2025)
 
 ### Bug Fixes & Stability Improvements
 - **번역 함수 오류 수정**: `translateItemAction`에서 함수 호출 시그니처 수정
