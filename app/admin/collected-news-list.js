@@ -84,7 +84,7 @@ export default function CollectedNewsList({ items, addToTopAction, deleteNewsIte
                                 />
                                 <span className="text-xs font-bold text-blue-600 uppercase">{item.source}</span>
                             </div>
-                            <span className="text-xs text-gray-500">{new Date(item.publishedAt).toLocaleDateString()}</span>
+                            <span className="text-xs text-gray-500">{item.publishedAt ? new Date(item.publishedAt).toISOString().split('T')[0] : ''}</span>
                         </div>
                         <h3 className="font-medium text-gray-900 mb-2">
                             <Link href={`/admin/news/${item.id}/translate`} className="hover:text-blue-600 hover:underline">
