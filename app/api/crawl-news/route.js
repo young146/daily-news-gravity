@@ -1,52 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import OpenAI from 'openai';
+import { translateTitle } from '@/lib/translator';
 
 const prisma = new PrismaClient();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function translateTitle(item) {
-  if (!process.env.OPENAI_API_KEY) {
-    return { translatedTitle: null, category: item.category || 'Society' };
-  }
-
-  const isKorean = item.source === 'Yonhap News' || item.source === 'InsideVina';
-  
-  // 이미 한국어면 그대로 반환
-  if (isKorean) {
-    return { translatedTitle: item.title, category: item.category || 'Society' };
-  }
-  
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [{ 
-        role: "user", 
-        content: `Translate this news title to Korean (professional style). Return JSON only:
-{"title": "Korean translation", "category": "Society/Economy/Culture/Policy"}
-
-Title: "${item.title}"` 
-      }],
-      model: "gpt-4o-mini",
-      max_tokens: 150,
-      response_format: { type: "json_object" }
-    });
-    
-    const result = JSON.parse(completion.choices[0].message.content);
-    
-    return {
-      translatedTitle: result.title?.replace(/^["']|["']$/g, '') || item.title,
-      category: ['Society', 'Economy', 'Culture', 'Policy'].includes(result.category) 
-        ? result.category 
-        : (item.category || 'Society')
-    };
-  } catch (error) {
-    console.error(`[번역 실패] ${error.message}`);
-    return { translatedTitle: null, category: item.category || 'Society' };
-  }
-}
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
