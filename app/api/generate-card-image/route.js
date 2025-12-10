@@ -20,38 +20,7 @@ export async function GET(request) {
 
     const fontSize = title.length > 40 ? 42 : 52;
 
-    let imageDataUrl = null;
-    
-    if (imageUrl) {
-        try {
-            const https = require('https');
-            const crypto = require('crypto');
-            
-            const agent = new https.Agent({
-                rejectUnauthorized: false,
-                secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
-            });
-            
-            const response = await fetch(imageUrl, {
-                agent,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            });
-            
-            if (response.ok) {
-                const buffer = await response.arrayBuffer();
-                const base64 = Buffer.from(buffer).toString('base64');
-                const contentType = response.headers.get('content-type') || 'image/jpeg';
-                imageDataUrl = `data:${contentType};base64,${base64}`;
-                console.log('[CardImage] Image fetched successfully:', imageUrl.substring(0, 50) + '...');
-            } else {
-                console.log('[CardImage] Image fetch failed:', response.status);
-            }
-        } catch (e) {
-            console.log('[CardImage] Image fetch error:', e.message);
-        }
-    }
+    console.log('[CardImage] Generating with image:', imageUrl ? imageUrl.substring(0, 60) + '...' : 'none');
 
     try {
         return new ImageResponse(
@@ -66,9 +35,11 @@ export async function GET(request) {
                         fontFamily: 'sans-serif',
                     }}
                 >
-                    {imageDataUrl ? (
+                    {imageUrl ? (
                         <img
-                            src={imageDataUrl}
+                            src={imageUrl}
+                            width={1200}
+                            height={630}
                             style={{
                                 position: 'absolute',
                                 top: 0,

@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { publishCardNewsToWordPress } from '@/lib/publisher';
+import { publishCardNewsToWordPress, uploadImageToWordPress } from '@/lib/publisher';
 import { getSeoulWeather, getExchangeRates } from '@/lib/external-data';
 
 export const runtime = 'nodejs';
@@ -25,21 +25,31 @@ export async function POST(request) {
         
         const title = topNews.translatedTitle || topNews.title || '오늘의 뉴스';
         const summary = topNews.translatedSummary || topNews.summary || '';
-        const imageUrl = topNews.imageUrl || '';
-        const date = new Date().toLocaleDateString('ko-KR', { 
-            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
-        });
+        let imageUrl = topNews.imageUrl || '';
+        
+        if (imageUrl) {
+            console.log('[CardNews API] Original image URL:', imageUrl);
+            
+            const uploadedImage = await uploadImageToWordPress(imageUrl, `cardnews-bg-${Date.now()}`);
+            
+            if (uploadedImage && uploadedImage.url) {
+                imageUrl = uploadedImage.url;
+                console.log('[CardNews API] Using WordPress image URL:', imageUrl);
+            } else {
+                console.log('[CardNews API] Image upload failed, using original URL');
+            }
+        }
+        
         const weatherTemp = weather?.temp ?? '25';
         const usdRate = rates?.usdVnd?.toLocaleString() ?? '25,400';
         const krwRate = rates?.krwVnd?.toLocaleString() ?? '17.8';
         
-        console.log('[CardNews API] Generating image with data:', { title, date });
+        console.log('[CardNews API] Generating image with data:', { title, imageUrl: imageUrl.substring(0, 50) + '...' });
         
         const params = new URLSearchParams({
             title,
             summary,
             image: imageUrl,
-            date,
             weather: String(weatherTemp),
             usd: String(usdRate),
             krw: String(krwRate)
@@ -52,6 +62,8 @@ export async function POST(request) {
         const imageResponse = await fetch(`${baseUrl}/api/generate-card-image?${params.toString()}`);
         
         if (!imageResponse.ok) {
+            const errorText = await imageResponse.text();
+            console.error('[CardNews API] Image generation error response:', errorText);
             throw new Error(`Image generation failed: ${imageResponse.status}`);
         }
         
