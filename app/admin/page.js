@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { translateText, translateNewsItem } from '@/lib/translator';
 import CategorySelector from './category-selector';
 import GenerateButton from './generate-button';
-import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton } from './batch-actions';
+import { BatchTranslateButton, BatchPublishButton, CardNewsToggle, WorkflowButton, DeleteSelectedNewsButton } from './batch-actions';
 import CrawlNewsButton from './crawl-news-button';
 import CollectedNewsList from './collected-news-list';
 
@@ -26,7 +26,17 @@ async function getNews() {
     const selectionPark = allNews.filter(item => !item.isSelected);
     const topNews = allNews.filter(item => item.isSelected);
 
-    return { selectionPark, topNews };
+    // Get today's published count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayPublishedCount = await prisma.newsItem.count({
+        where: {
+            status: 'PUBLISHED',
+            publishedAt: { gte: today }
+        }
+    });
+
+    return { selectionPark, topNews, todayPublishedCount };
 }
 
 async function addToTop(formData) {
@@ -78,7 +88,7 @@ async function deleteNewsItem(formData) {
 }
 
 export default async function AdminPage() {
-    const { selectionPark, topNews } = await getNews();
+    const { selectionPark, topNews, todayPublishedCount } = await getNews();
 
     const topCount = topNews.filter(n => n.isTopNews).length;
     const socCount = topNews.filter(n => n.category === 'Society' && !n.isTopNews).length;
@@ -198,6 +208,7 @@ export default async function AdminPage() {
                                                 {item.isTopNews ? '★ Unset Top' : '☆ Set as Top'}
                                             </button>
                                         </form>
+                                        <DeleteSelectedNewsButton id={item.id} />
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +216,15 @@ export default async function AdminPage() {
                     </div>
                     {topNews.length === 0 && (
                         <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-                            <p className="text-gray-500">왼쪽에서 뉴스를 선택하세요.</p>
+                            {todayPublishedCount > 0 ? (
+                                <div className="space-y-2">
+                                    <div className="text-4xl">✅</div>
+                                    <p className="text-green-600 font-bold text-lg">오늘 {todayPublishedCount}개 뉴스 발행 완료!</p>
+                                    <p className="text-gray-500 text-sm">새 뉴스를 선택하려면 왼쪽에서 추가하세요.</p>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500">왼쪽에서 뉴스를 선택하세요.</p>
+                            )}
                         </div>
                     )}
                 </div>

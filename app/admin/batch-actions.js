@@ -1,6 +1,6 @@
 'use client';
-import { useTransition, useOptimistic } from 'react';
-import { batchTranslateAction, batchPublishDailyAction, toggleCardNewsAction, batchTranslateTitlesAction } from './actions';
+import { useTransition, useOptimistic, useState } from 'react';
+import { batchTranslateAction, batchPublishDailyAction, toggleCardNewsAction, batchTranslateTitlesAction, deleteSelectedNewsAction } from './actions';
 import { useRouter } from 'next/navigation';
 
 export function BatchTranslateTitlesButton({ ids }) {
@@ -65,6 +65,26 @@ export function BatchPublishButton({ ids }) {
             className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
         >
             {isPending ? 'Publishing...' : '🚀 Publish Daily'}
+        </button>
+    );
+}
+
+export function DeleteSelectedNewsButton({ id }) {
+    const [isPending, startTransition] = useTransition();
+
+    return (
+        <button
+            type="button"
+            onClick={() => {
+                if (confirm('이 뉴스를 삭제하시겠습니까?')) {
+                    startTransition(() => deleteSelectedNewsAction(id));
+                }
+            }}
+            disabled={isPending}
+            className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-50"
+            title="삭제"
+        >
+            {isPending ? '...' : '🗑️'}
         </button>
     );
 }

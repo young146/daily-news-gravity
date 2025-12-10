@@ -248,3 +248,14 @@ export async function batchDeleteAction(ids) {
         return { success: false, error: error.message };
     }
 }
+
+export async function deleteSelectedNewsAction(id) {
+    try {
+        await prisma.newsItem.delete({ where: { id } });
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error) {
+        console.error('Delete selected news failed:', error);
+        return { success: false, error: error.message };
+    }
+}
