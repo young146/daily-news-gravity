@@ -100,7 +100,8 @@ export default function SettingsPage() {
     { id: 'tuoitre', name: 'TuoiTre', file: 'tuoitre' },
     { id: 'thanhnien', name: 'ThanhNien', file: 'thanhnien' },
     { id: 'publicsecurity', name: '공안신문 (PublicSecurity)', file: 'publicsecurity' },
-    { id: 'saigoneer', name: 'Saigoneer (라이프스타일)', file: 'saigoneer' },
+    { id: 'saigoneer', name: 'Saigoneer (음식/펫/여행)', file: 'saigoneer' },
+    { id: 'japantoday', name: 'SoraNews24 (일본 라이프)', file: 'japantoday' },
   ];
 
   const commands = [
@@ -571,7 +572,8 @@ export default function SettingsPage() {
               tuoitre.js<br/>
               thanhnien.js<br/>
               publicsecurity.js<br/>
-              saigoneer.js
+              saigoneer.js<br/>
+              japantoday.js
             </div>
           </div>
           <div style={{ color: '#6b7280', marginTop: '10px' }}>lib/</div>
@@ -659,6 +661,7 @@ export default function SettingsPage() {
                 <SelectorRow name="ThanhNien" list=".story" content=".detail-content" />
                 <SelectorRow name="PublicSecurity" list='a[href*="-i"]' content=".entry-content" />
                 <SelectorRow name="Saigoneer" list='a[href*="/saigon-"]' content=".item-page" />
+                <SelectorRow name="SoraNews24" list='soranews24.com/20' content=".entry-content" />
               </tbody>
             </table>
           </div>

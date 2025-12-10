@@ -470,7 +470,7 @@ async function crawlSaigoneer() {
     const cheerio = await import('cheerio');
     const items = [];
     try {
-        console.log('Crawling Saigoneer (Lifestyle/Food/Culture)...');
+        console.log('Crawling Saigoneer (Food/Pet/Travel)...');
         
         const { data } = await fetchWithRetry('https://saigoneer.com/');
         const $ = cheerio.load(data);
@@ -478,28 +478,23 @@ async function crawlSaigoneer() {
         const listItems = [];
         const seen = new Set();
         
-        $('a[href*="saigoneer.com"]').each((i, el) => {
+        $('a').each((i, el) => {
             if (listItems.length >= 10) return;
             
-            const href = $(el).attr('href');
+            const href = $(el).attr('href') || '';
             const title = $(el).text().trim();
             
-            if (!title || title.length < 20 || title.length > 200) return;
-            if (!href) return;
-            if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
+            if (!title || title.length < 30 || title.length > 200) return;
+            if (!href.includes('saigoneer.com/')) return;
+            if (href.includes('/tag/') || href.includes('/author/') || href.includes('/listings/') || href.includes('/chapters/')) return;
             
-            const isArticle = href.match(/\/\d+-/) || href.includes('/saigon-') || href.includes('/vietnam-');
+            const isArticle = href.match(/\/\d+-[a-z]/i);
             if (!isArticle) return;
             
             if (seen.has(href)) return;
             seen.add(href);
             
-            let category = 'Culture';
-            if (href.includes('food') || href.includes('drink') || href.includes('restaurant')) category = 'Culture';
-            if (href.includes('travel') || href.includes('explore')) category = 'Culture';
-            if (href.includes('event')) category = 'Culture';
-            
-            listItems.push({ title, url: href, category });
+            listItems.push({ title, url: href, category: 'Culture' });
         });
 
         console.log(`Saigoneer list items found: ${listItems.length}`);
@@ -531,9 +526,65 @@ async function crawlSaigoneer() {
     return items;
 }
 
+async function crawlJapanToday() {
+    const cheerio = await import('cheerio');
+    const items = [];
+    try {
+        console.log('Crawling SoraNews24 (Japan Lifestyle)...');
+        
+        const { data } = await fetchWithRetry('https://soranews24.com/');
+        const $ = cheerio.load(data);
+        
+        const listItems = [];
+        const seen = new Set();
+        
+        $('a').each((i, el) => {
+            if (listItems.length >= 6) return;
+            
+            const href = $(el).attr('href') || '';
+            let title = $(el).text().trim();
+            
+            if (!title || title.length < 30 || title.length > 200) return;
+            if (!href.includes('soranews24.com/20')) return;
+            
+            if (seen.has(href)) return;
+            seen.add(href);
+            
+            listItems.push({ title, url: href, category: 'Culture' });
+        });
+        
+        console.log(`SoraNews24 list items found: ${listItems.length}`);
+        
+        for (const item of listItems) {
+            const detail = await fetchDetailPage(item.url, ['.entry-content', '.post-content', '.article-body']);
+            
+            const summary = detail.content ? 
+                cheerio.load(detail.content).text().trim().substring(0, 300) : 
+                item.title;
+            
+            items.push({
+                title: item.title,
+                summary: summary,
+                content: detail.content,
+                originalUrl: item.url,
+                imageUrl: detail.imageUrl,
+                source: 'SoraNews24',
+                category: item.category,
+                publishedAt: new Date(),
+                status: 'DRAFT'
+            });
+            await new Promise(r => setTimeout(r, 500));
+        }
+        console.log(`SoraNews24: ${items.length} items`);
+    } catch (e) {
+        console.error('SoraNews24 crawl error:', e.message);
+    }
+    return items;
+}
+
 export async function POST(request) {
     try {
-        console.log('🚀 Starting News Crawl (8 Sources with Detail Pages)...');
+        console.log('🚀 Starting News Crawl (9 Sources with Detail Pages)...');
         
         const results = await Promise.all([
             crawlVnExpress(),
@@ -543,11 +594,12 @@ export async function POST(request) {
             crawlTuoitre(),
             crawlThanhNien(),
             crawlPublicSecurity(),
-            crawlSaigoneer()
+            crawlSaigoneer(),
+            crawlJapanToday()
         ]);
         
-        const [vnItems, vnvnItems, yhItems, ivItems, ttItems, tnItems, psItems, sgItems] = results;
-        const allItems = [...vnItems, ...vnvnItems, ...yhItems, ...ivItems, ...ttItems, ...tnItems, ...psItems, ...sgItems];
+        const [vnItems, vnvnItems, yhItems, ivItems, ttItems, tnItems, psItems, sgItems, jtItems] = results;
+        const allItems = [...vnItems, ...vnvnItems, ...yhItems, ...ivItems, ...ttItems, ...tnItems, ...psItems, ...sgItems, ...jtItems];
         
         console.log(`Total items found: ${allItems.length}`);
         
@@ -560,7 +612,8 @@ export async function POST(request) {
             'TuoiTre': ttItems.length,
             'ThanhNien': tnItems.length,
             'PublicSecurity': psItems.length,
-            'Saigoneer': sgItems.length
+            'Saigoneer': sgItems.length,
+            'SoraNews24': jtItems.length
         };
         
         // 1. 중복 필터링

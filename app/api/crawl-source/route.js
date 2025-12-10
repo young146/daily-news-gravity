@@ -10,6 +10,7 @@ const sourceNames = {
   'thanhnien': 'ThanhNien',
   'publicsecurity': 'PublicSecurity',
   'saigoneer': 'Saigoneer',
+  'japantoday': 'SoraNews24',
 };
 
 const crawlers = {
@@ -21,6 +22,7 @@ const crawlers = {
   'thanhnien': () => require('@/scripts/crawlers/thanhnien')(),
   'publicsecurity': () => require('@/scripts/crawlers/publicsecurity')(),
   'saigoneer': () => require('@/scripts/crawlers/saigoneer')(),
+  'japantoday': () => require('@/scripts/crawlers/japantoday')(),
 };
 
 export async function POST(request) {

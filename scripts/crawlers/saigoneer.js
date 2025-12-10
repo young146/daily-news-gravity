@@ -2,50 +2,62 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 async function crawlSaigoneer() {
-    console.log('Starting crawl of Saigoneer (Lifestyle/Food/Culture)...');
+    console.log('Starting crawl of Saigoneer (Food/Pet/Travel)...');
     try {
-        const { data } = await axios.get('https://saigoneer.com/', {
-            timeout: 15000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-        });
-        const $ = cheerio.load(data);
+        const categories = [
+            'https://saigoneer.com/saigon-food-culture',
+            'https://saigoneer.com/vietnam-travel',
+            'https://saigoneer.com/natural-selection'
+        ];
+        
         const listItems = [];
         const seen = new Set();
 
-        $('a[href*="saigoneer.com"]').each((index, element) => {
-            if (listItems.length >= 10) return;
+        for (const catUrl of categories) {
+            try {
+                const { data } = await axios.get(catUrl, {
+                    timeout: 15000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    }
+                });
+                const $ = cheerio.load(data);
 
-            const href = $(element).attr('href');
-            const title = $(element).text().trim();
+                $('a[href*="saigoneer.com"]').each((index, element) => {
+                    if (listItems.length >= 12) return;
 
-            if (!title || title.length < 20 || title.length > 200) return;
-            if (!href) return;
-            if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
+                    const href = $(element).attr('href');
+                    const title = $(element).text().trim();
 
-            const isArticle = href.match(/\/\d+-/) || href.includes('/saigon-') || href.includes('/vietnam-');
-            if (!isArticle) return;
+                    if (!title || title.length < 20 || title.length > 200) return;
+                    if (!href) return;
+                    if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
 
-            if (seen.has(href)) return;
-            seen.add(href);
+                    const isArticle = href.match(/\/\d+-/);
+                    if (!isArticle) return;
 
-            let category = 'Culture';
-            if (href.includes('food') || href.includes('drink') || href.includes('restaurant')) category = 'Culture';
-            if (href.includes('travel') || href.includes('explore')) category = 'Culture';
-            if (href.includes('event')) category = 'Culture';
+                    if (seen.has(href)) return;
+                    seen.add(href);
 
-            listItems.push({
-                title,
-                summary: '',
-                originalUrl: href,
-                imageUrl: '',
-                category,
-                source: 'Saigoneer',
-                publishedAt: new Date(),
-                status: 'DRAFT'
-            });
-        });
+                    let category = 'Culture';
+
+                    listItems.push({
+                        title,
+                        summary: '',
+                        originalUrl: href,
+                        imageUrl: '',
+                        category,
+                        source: 'Saigoneer',
+                        publishedAt: new Date(),
+                        status: 'DRAFT'
+                    });
+                });
+
+                await new Promise(r => setTimeout(r, 300));
+            } catch (e) {
+                console.log(`Saigoneer category error (${catUrl}):`, e.message);
+            }
+        }
 
         console.log(`Saigoneer list items found: ${listItems.length}`);
 
