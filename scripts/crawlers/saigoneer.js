@@ -1,13 +1,15 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+const BASE_URL = 'https://kr.saigoneer.com';
+
 async function crawlSaigoneer() {
     console.log('Starting crawl of Saigoneer 한글판 (음식/여행)...');
     try {
         const categories = [
-            { url: 'https://kr.saigoneer.com/eat-drink', category: 'Culture' },
-            { url: 'https://kr.saigoneer.com/%EA%B8%B8%EA%B1%B0%EB%A6%AC-%EC%9D%8C%EC%8B%9D', category: 'Culture' },
-            { url: 'https://kr.saigoneer.com/%EA%B4%80%EA%B4%91', category: 'Culture' },
+            { url: `${BASE_URL}/eat-drink`, category: 'Culture' },
+            { url: `${BASE_URL}/%EA%B8%B8%EA%B1%B0%EB%A6%AC-%EC%9D%8C%EC%8B%9D`, category: 'Culture' },
+            { url: `${BASE_URL}/%EA%B4%80%EA%B4%91`, category: 'Culture' },
         ];
         
         const listItems = [];
@@ -24,25 +26,31 @@ async function crawlSaigoneer() {
                 });
                 const $ = cheerio.load(data);
 
-                $('a[href*="kr.saigoneer.com"]').each((index, element) => {
+                $('a').each((index, element) => {
                     if (listItems.length >= 8) return;
 
-                    const href = $(element).attr('href');
-                    const title = $(element).text().trim();
+                    let href = $(element).attr('href') || '';
+                    const title = $(element).text().trim().replace(/\s+/g, ' ');
 
-                    if (!title || title.length < 10 || title.length > 200) return;
+                    if (!title || title.length < 15 || title.length > 200) return;
                     if (!href) return;
-                    if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
-                    if (href.includes('/explore/') || href.includes('/support') || href.includes('/news')) return;
+                    
+                    const hasArticleId = href.match(/\/\d+-/);
+                    if (!hasArticleId) return;
+                    
+                    if (href.includes('/explore/') || href.includes('/support')) return;
 
-                    const isArticle = href.match(/\/\d+-/) || href.match(/\/\d+$/);
-                    if (!isArticle) return;
+                    if (href.startsWith('/')) {
+                        href = BASE_URL + href;
+                    }
 
                     if (seen.has(href)) return;
                     seen.add(href);
 
+                    const cleanTitle = title.split(' - ').pop().trim();
+
                     listItems.push({
-                        title,
+                        title: cleanTitle,
                         summary: '',
                         originalUrl: href,
                         imageUrl: '',
@@ -78,6 +86,11 @@ async function crawlSaigoneer() {
                 const metaImage = $detail('meta[property="og:image"]').attr('content');
                 if (metaImage) {
                     item.imageUrl = metaImage;
+                }
+
+                const ogTitle = $detail('meta[property="og:title"]').attr('content');
+                if (ogTitle) {
+                    item.title = ogTitle.replace(/\s*\|\s*Saigoneer.*$/i, '').trim();
                 }
 
                 if (content) {
