@@ -120,7 +120,7 @@ export default async function AdminPage() {
             {/* Status Dashboard (Sticky) */}
             <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm py-3 mb-6 -mx-6 px-6 border-b border-gray-200">
                 <div className="flex justify-between gap-2 overflow-x-auto">
-                    <Counter label="Top News" count={topCount} target={2} />
+                    <Counter label="탑뉴스" count={topCount} target={1} />
                     <Counter label="Society" count={socCount} target={4} />
                     <Counter label="Economy" count={ecoCount} target={4} />
                     <Counter label="Culture" count={culCount} target={4} />
@@ -143,12 +143,12 @@ export default async function AdminPage() {
                     />
                 </div>
 
-                {/* Right Column: Top News */}
+                {/* Right Column: 선정된 뉴스 */}
                 <div className="border rounded-lg p-4 bg-white shadow-sm">
                     <h2 className="text-xl font-semibold mb-4 flex justify-between items-center text-blue-800">
                         <div className="flex items-center gap-2">
-                            Top News (Selected)
-                            <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded">{topNews.length} items</span>
+                            선정된 뉴스
+                            <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded">{topNews.length}개</span>
                         </div>
                         <div className="flex gap-2">
                             <WorkflowButton topNews={topNews} />
@@ -205,7 +205,7 @@ export default async function AdminPage() {
                     </div>
                     {topNews.length === 0 && (
                         <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-                            <p className="text-gray-500">Select news from the left column to start curation.</p>
+                            <p className="text-gray-500">왼쪽에서 뉴스를 선택하세요.</p>
                         </div>
                     )}
                 </div>

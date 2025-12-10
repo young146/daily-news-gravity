@@ -51,15 +51,40 @@ Single publication target on chaovietnam.co.kr:
 | `app/admin/actions.js` | Server actions for publishing |
 | `scripts/crawler.js` | News crawler |
 
-## Publishing Workflow
+## 일일 워크플로우 (Daily Workflow)
 
-1. **Crawl** → Fetch news from sources (8am daily)
-2. **Select** → Admin selects ~20 articles
-3. **Translate** → GPT translates to Korean
-4. **Publish** → Full article to 데일리뉴스 (category 31)
-   - Image uploaded to WordPress Media Library
-   - Featured image set
-   - Jenny plugin reads from this category directly
+### 1단계: 뉴스 수집 (Collect News)
+- 뉴스 소스에서 기사 수집 (매일 오전 7시 자동 또는 수동)
+- **제목만 한국어로 자동 번역** (GPT-4o-mini)
+- Collected News 목록에 표시
+
+### 2단계: 뉴스 선정 (Select News)
+- Collected News에서 제목을 보고 기사 선정 (~20개)
+- "선정된 뉴스" 목록으로 이동
+- 탑뉴스(Top News) 1개 지정
+
+### 3단계: 번역 및 요약 생성 (Translate & Summarize)
+- 선정된 뉴스에 대해 전문 번역 + 요약본 생성 (GPT-4)
+- 카테고리 자동 분류 (Society/Economy/Culture/Policy)
+- 각 기사별 수정 및 확인 작업
+
+### 4단계: WordPress 발행 (Publish)
+- 확인된 모든 기사 일괄 발행
+- **본문** → 뉴스/데일리뉴스 (category 6, 31)
+- **요약본** → https://chaovietnam.co.kr/daily-news-terminal/
+  - Jenny 플러그인이 본문에서 excerpt 자동 추출
+
+### 5단계: 카드 전령 생성 (Card News)
+- 탑뉴스를 배경으로 오늘의 뉴스 카드 이미지 생성
+- 날씨, 환율 정보 포함 (1200×630 OG 규격)
+- WordPress에 업로드 → SNS로 독자에게 공유
+
+### 발행 결과
+| 콘텐츠 | 발행 위치 |
+|--------|----------|
+| 본문 (Full Article) | 뉴스/데일리뉴스 (category 31) |
+| 요약본 (Summary) | daily-news-terminal 페이지 |
+| 카드 전령 (Card News) | 뉴스 터미널 Featured Image → SNS 공유 |
 
 ## Image Handling
 
