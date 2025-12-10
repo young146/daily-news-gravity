@@ -32,7 +32,11 @@ async function crawlSoraNews24() {
                     const title = $(element).text().trim();
 
                     if (!title || title.length < 30 || title.length > 200) return;
-                    if (!href.includes('soranews24.com/20')) return;
+                    
+                    const currentYear = new Date().getFullYear();
+                    const lastYear = currentYear - 1;
+                    if (!href.includes(`soranews24.com/${currentYear}/`) && 
+                        !href.includes(`soranews24.com/${lastYear}/`)) return;
 
                     if (seen.has(href)) return;
                     seen.add(href);
