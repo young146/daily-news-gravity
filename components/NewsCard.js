@@ -1,14 +1,26 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import NewsImage from "./NewsImage";
 import { ArrowRight, Calendar } from "lucide-react";
 
 export default function NewsCard({ news }) {
-    // Handle date formatting safely
-    const formattedDate = news.publishedAt
-        ? new Date(news.publishedAt).toLocaleDateString()
-        : news.date;
+    const [formattedDate, setFormattedDate] = useState('');
+
+    useEffect(() => {
+        if (news.publishedAt) {
+            const date = new Date(news.publishedAt);
+            setFormattedDate(date.toLocaleDateString('ko-KR', {
+                timeZone: 'Asia/Bangkok',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }));
+        } else if (news.date) {
+            setFormattedDate(news.date);
+        }
+    }, [news.publishedAt, news.date]);
 
     return (
         <div className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
