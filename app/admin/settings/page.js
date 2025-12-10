@@ -100,8 +100,8 @@ export default function SettingsPage() {
     { id: 'tuoitre', name: 'TuoiTre', file: 'tuoitre' },
     { id: 'thanhnien', name: 'ThanhNien', file: 'thanhnien' },
     { id: 'publicsecurity', name: '공안신문 (PublicSecurity)', file: 'publicsecurity' },
-    { id: 'saigoneer', name: 'Saigoneer (음식/펫/여행)', file: 'saigoneer' },
-    { id: 'soranews24', name: 'SoraNews24 (일본 라이프)', file: 'soranews24' },
+    { id: 'saigoneer', name: 'Saigoneer 한글판 (음식/여행)', file: 'saigoneer' },
+    { id: 'soranews24', name: 'SoraNews24 (음식/펫/여행)', file: 'soranews24' },
   ];
 
   const commands = [

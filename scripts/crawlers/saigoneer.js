@@ -2,20 +2,21 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 async function crawlSaigoneer() {
-    console.log('Starting crawl of Saigoneer (Food/Pet/Travel)...');
+    console.log('Starting crawl of Saigoneer 한글판 (음식/여행)...');
     try {
         const categories = [
-            'https://saigoneer.com/saigon-food-culture',
-            'https://saigoneer.com/vietnam-travel',
-            'https://saigoneer.com/natural-selection'
+            { url: 'https://kr.saigoneer.com/eat-drink', category: 'Culture' },
+            { url: 'https://kr.saigoneer.com/%EA%B8%B8%EA%B1%B0%EB%A6%AC-%EC%9D%8C%EC%8B%9D', category: 'Culture' },
+            { url: 'https://kr.saigoneer.com/%EA%B4%80%EA%B4%91', category: 'Culture' },
         ];
         
         const listItems = [];
         const seen = new Set();
 
-        for (const catUrl of categories) {
+        for (const cat of categories) {
             try {
-                const { data } = await axios.get(catUrl, {
+                console.log(`Fetching: ${cat.url}`);
+                const { data } = await axios.get(cat.url, {
                     timeout: 15000,
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -23,30 +24,29 @@ async function crawlSaigoneer() {
                 });
                 const $ = cheerio.load(data);
 
-                $('a[href*="saigoneer.com"]').each((index, element) => {
-                    if (listItems.length >= 12) return;
+                $('a[href*="kr.saigoneer.com"]').each((index, element) => {
+                    if (listItems.length >= 8) return;
 
                     const href = $(element).attr('href');
                     const title = $(element).text().trim();
 
-                    if (!title || title.length < 20 || title.length > 200) return;
+                    if (!title || title.length < 10 || title.length > 200) return;
                     if (!href) return;
                     if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
+                    if (href.includes('/explore/') || href.includes('/support') || href.includes('/news')) return;
 
-                    const isArticle = href.match(/\/\d+-/);
+                    const isArticle = href.match(/\/\d+-/) || href.match(/\/\d+$/);
                     if (!isArticle) return;
 
                     if (seen.has(href)) return;
                     seen.add(href);
-
-                    let category = 'Culture';
 
                     listItems.push({
                         title,
                         summary: '',
                         originalUrl: href,
                         imageUrl: '',
-                        category,
+                        category: cat.category,
                         source: 'Saigoneer',
                         publishedAt: new Date(),
                         status: 'DRAFT'
@@ -55,11 +55,11 @@ async function crawlSaigoneer() {
 
                 await new Promise(r => setTimeout(r, 300));
             } catch (e) {
-                console.log(`Saigoneer category error (${catUrl}):`, e.message);
+                console.log(`Saigoneer category error (${cat.url}):`, e.message);
             }
         }
 
-        console.log(`Saigoneer list items found: ${listItems.length}`);
+        console.log(`Saigoneer 한글판 list items found: ${listItems.length}`);
 
         const detailedItems = [];
         for (const item of listItems) {
@@ -94,7 +94,7 @@ async function crawlSaigoneer() {
             }
         }
 
-        console.log(`Saigoneer: ${detailedItems.length} items with details`);
+        console.log(`Saigoneer 한글판: ${detailedItems.length} items with details`);
         return detailedItems;
     } catch (error) {
         console.error('Error crawling Saigoneer:', error.message);
