@@ -45,7 +45,10 @@ export async function POST(request) {
             krw: String(krwRate)
         });
         
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+            : (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000');
+        console.log('[CardNews API] Using base URL:', baseUrl);
         const imageResponse = await fetch(`${baseUrl}/api/generate-card-image?${params.toString()}`);
         
         if (!imageResponse.ok) {
