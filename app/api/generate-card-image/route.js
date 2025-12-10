@@ -1,5 +1,31 @@
 import { ImageResponse } from '@vercel/og';
 
+async function fetchImageAsBase64(url) {
+    try {
+        console.log('[CardImage] Fetching image:', url.substring(0, 60) + '...');
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+        
+        if (!response.ok) {
+            console.log('[CardImage] Failed to fetch image:', response.status);
+            return null;
+        }
+        
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        const dataUri = `data:${contentType};base64,${base64}`;
+        console.log('[CardImage] Image converted to base64, size:', base64.length);
+        return dataUri;
+    } catch (error) {
+        console.error('[CardImage] Error fetching image:', error.message);
+        return null;
+    }
+}
+
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     
@@ -20,7 +46,12 @@ export async function GET(request) {
 
     const fontSize = title.length > 40 ? 42 : 52;
 
-    console.log('[CardImage] Generating with image:', imageUrl ? imageUrl.substring(0, 60) + '...' : 'none');
+    let backgroundImageSrc = null;
+    if (imageUrl) {
+        backgroundImageSrc = await fetchImageAsBase64(imageUrl);
+    }
+    
+    console.log('[CardImage] Generating with image:', backgroundImageSrc ? 'base64 (loaded)' : 'none');
 
     try {
         return new ImageResponse(
@@ -35,9 +66,9 @@ export async function GET(request) {
                         fontFamily: 'sans-serif',
                     }}
                 >
-                    {imageUrl ? (
+                    {backgroundImageSrc ? (
                         <img
-                            src={imageUrl}
+                            src={backgroundImageSrc}
                             width={1200}
                             height={630}
                             style={{
