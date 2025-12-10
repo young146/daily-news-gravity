@@ -8,7 +8,7 @@ const sourceNames = {
   'insidevina': 'InsideVina',
   'tuoitre': 'TuoiTre',
   'thanhnien': 'ThanhNien',
-  'vnanet': 'VNA',
+  'publicsecurity': 'PublicSecurity',
 };
 
 const crawlers = {
@@ -18,7 +18,7 @@ const crawlers = {
   'insidevina': () => require('@/scripts/crawlers/insidevina')(),
   'tuoitre': () => require('@/scripts/crawlers/tuoitre')(),
   'thanhnien': () => require('@/scripts/crawlers/thanhnien')(),
-  'vnanet': () => require('@/scripts/crawlers/vnanet')(),
+  'publicsecurity': () => require('@/scripts/crawlers/publicsecurity')(),
 };
 
 export async function POST(request) {

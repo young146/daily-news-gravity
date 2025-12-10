@@ -99,7 +99,7 @@ export default function SettingsPage() {
     { id: 'insidevina', name: 'InsideVina', file: 'insidevina' },
     { id: 'tuoitre', name: 'TuoiTre', file: 'tuoitre' },
     { id: 'thanhnien', name: 'ThanhNien', file: 'thanhnien' },
-    { id: 'vnanet', name: 'VNA', file: 'vnanet' },
+    { id: 'publicsecurity', name: '공안신문 (PublicSecurity)', file: 'publicsecurity' },
   ];
 
   const commands = [
@@ -109,9 +109,9 @@ export default function SettingsPage() {
       description: '모든 뉴스 소스에서 크롤링'
     },
     { 
-      title: 'VNA만 크롤링', 
-      command: 'node -e "require(\'./scripts/crawlers/vnanet\')().then(i => console.log(i.length, \'items\'))"',
-      description: 'VNA 뉴스만 테스트 (DB 저장 없음)'
+      title: '공안신문만 크롤링', 
+      command: 'node -e "require(\'./scripts/crawlers/publicsecurity\')().then(i => console.log(i.length, \'items\'))"',
+      description: '공안신문만 테스트 (DB 저장 없음)'
     },
     { 
       title: 'Yonhap만 크롤링', 
@@ -569,7 +569,7 @@ export default function SettingsPage() {
               insidevina.js<br/>
               tuoitre.js<br/>
               thanhnien.js<br/>
-              vnanet.js
+              publicsecurity.js
             </div>
           </div>
           <div style={{ color: '#6b7280', marginTop: '10px' }}>lib/</div>
@@ -615,7 +615,7 @@ export default function SettingsPage() {
             <ErrorGuide 
               error="SSL_UNSAFE_LEGACY_RENEGOTIATION" 
               cause="오래된 SSL 설정" 
-              solution="axios에 httpsAgent 옵션 추가 (vnanet.js 참고)"
+              solution="axios에 httpsAgent 옵션 추가 (yonhap.js 참고)"
             />
             <ErrorGuide 
               error="403 Forbidden" 
@@ -655,7 +655,7 @@ export default function SettingsPage() {
                 <SelectorRow name="InsideVina" list='a[href*="articleView"]' content="#article-view-content-div" />
                 <SelectorRow name="TuoiTre" list="h3 a, h2 a" content="#main-detail-body" />
                 <SelectorRow name="ThanhNien" list=".story" content=".detail-content" />
-                <SelectorRow name="VNA" list='a[href*=".html"]' content=".sample-grl" />
+                <SelectorRow name="PublicSecurity" list='a[href*="-i"]' content=".entry-content" />
               </tbody>
             </table>
           </div>
