@@ -100,6 +100,7 @@ export default function SettingsPage() {
     { id: 'tuoitre', name: 'TuoiTre', file: 'tuoitre' },
     { id: 'thanhnien', name: 'ThanhNien', file: 'thanhnien' },
     { id: 'publicsecurity', name: '공안신문 (PublicSecurity)', file: 'publicsecurity' },
+    { id: 'saigoneer', name: 'Saigoneer (라이프스타일)', file: 'saigoneer' },
   ];
 
   const commands = [
@@ -569,7 +570,8 @@ export default function SettingsPage() {
               insidevina.js<br/>
               tuoitre.js<br/>
               thanhnien.js<br/>
-              publicsecurity.js
+              publicsecurity.js<br/>
+              saigoneer.js
             </div>
           </div>
           <div style={{ color: '#6b7280', marginTop: '10px' }}>lib/</div>
@@ -656,6 +658,7 @@ export default function SettingsPage() {
                 <SelectorRow name="TuoiTre" list="h3 a, h2 a" content="#main-detail-body" />
                 <SelectorRow name="ThanhNien" list=".story" content=".detail-content" />
                 <SelectorRow name="PublicSecurity" list='a[href*="-i"]' content=".entry-content" />
+                <SelectorRow name="Saigoneer" list='a[href*="/saigon-"]' content=".item-page" />
               </tbody>
             </table>
           </div>

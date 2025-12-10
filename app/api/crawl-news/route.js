@@ -466,9 +466,74 @@ async function crawlPublicSecurity() {
     return items;
 }
 
+async function crawlSaigoneer() {
+    const cheerio = await import('cheerio');
+    const items = [];
+    try {
+        console.log('Crawling Saigoneer (Lifestyle/Food/Culture)...');
+        
+        const { data } = await fetchWithRetry('https://saigoneer.com/');
+        const $ = cheerio.load(data);
+        
+        const listItems = [];
+        const seen = new Set();
+        
+        $('a[href*="saigoneer.com"]').each((i, el) => {
+            if (listItems.length >= 10) return;
+            
+            const href = $(el).attr('href');
+            const title = $(el).text().trim();
+            
+            if (!title || title.length < 20 || title.length > 200) return;
+            if (!href) return;
+            if (href.includes('/tag/') || href.includes('/author/') || href.includes('/category/')) return;
+            
+            const isArticle = href.match(/\/\d+-/) || href.includes('/saigon-') || href.includes('/vietnam-');
+            if (!isArticle) return;
+            
+            if (seen.has(href)) return;
+            seen.add(href);
+            
+            let category = 'Culture';
+            if (href.includes('food') || href.includes('drink') || href.includes('restaurant')) category = 'Culture';
+            if (href.includes('travel') || href.includes('explore')) category = 'Culture';
+            if (href.includes('event')) category = 'Culture';
+            
+            listItems.push({ title, url: href, category });
+        });
+
+        console.log(`Saigoneer list items found: ${listItems.length}`);
+        
+        for (const item of listItems) {
+            const detail = await fetchDetailPage(item.url, ['.item-page', '.itemFullText', '.article-content']);
+            
+            const summary = detail.content ? 
+                cheerio.load(detail.content).text().trim().substring(0, 300) : 
+                item.title;
+            
+            items.push({
+                title: item.title,
+                summary: summary,
+                content: detail.content,
+                originalUrl: item.url,
+                imageUrl: detail.imageUrl,
+                source: 'Saigoneer',
+                category: item.category,
+                publishedAt: new Date(),
+                status: 'DRAFT'
+            });
+            await new Promise(r => setTimeout(r, 500));
+        }
+        console.log(`Saigoneer: ${items.length} items`);
+    } catch (e) {
+        console.error('Saigoneer crawl error:', e.message);
+    }
+    return items;
+}
+
 export async function POST(request) {
     try {
-        console.log('🚀 Starting News Crawl (7 Sources with Detail Pages)...');
+        console.log('🚀 Starting News Crawl (8 Sources with Detail Pages)...');
         
         const results = await Promise.all([
             crawlVnExpress(),
@@ -477,11 +542,12 @@ export async function POST(request) {
             crawlInsideVina(),
             crawlTuoitre(),
             crawlThanhNien(),
-            crawlPublicSecurity()
+            crawlPublicSecurity(),
+            crawlSaigoneer()
         ]);
         
-        const [vnItems, vnvnItems, yhItems, ivItems, ttItems, tnItems, psItems] = results;
-        const allItems = [...vnItems, ...vnvnItems, ...yhItems, ...ivItems, ...ttItems, ...tnItems, ...psItems];
+        const [vnItems, vnvnItems, yhItems, ivItems, ttItems, tnItems, psItems, sgItems] = results;
+        const allItems = [...vnItems, ...vnvnItems, ...yhItems, ...ivItems, ...ttItems, ...tnItems, ...psItems, ...sgItems];
         
         console.log(`Total items found: ${allItems.length}`);
         
@@ -493,7 +559,8 @@ export async function POST(request) {
             'InsideVina': ivItems.length,
             'TuoiTre': ttItems.length,
             'ThanhNien': tnItems.length,
-            'PublicSecurity': psItems.length
+            'PublicSecurity': psItems.length,
+            'Saigoneer': sgItems.length
         };
         
         // 1. 중복 필터링

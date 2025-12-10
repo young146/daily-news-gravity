@@ -19,6 +19,7 @@ Automated news workflow system for XinChao Vietnam, a 23-year-old Korean-languag
 - ThanhNien
 - InsideVina
 - Public Security News (en.cand.com.vn) - 베트남 공안 신문 영문판
+- Saigoneer - 베트남 음식/문화/라이프스타일 (영문)
 
 ### WordPress Publishing
 Single publication target on chaovietnam.co.kr:
@@ -97,6 +98,7 @@ Single publication target on chaovietnam.co.kr:
 | TuoiTre | ✅ Works | WordPress plugin |
 | ThanhNien | ✅ Works | WordPress plugin |
 | PublicSecurity | ✅ Works | WordPress plugin |
+| Saigoneer | ✅ Works | WordPress plugin |
 | Yonhap | ✅ Works | Replit → WordPress (SSL bypass) |
 
 ## Environment Variables

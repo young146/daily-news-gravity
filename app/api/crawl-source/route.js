@@ -9,6 +9,7 @@ const sourceNames = {
   'tuoitre': 'TuoiTre',
   'thanhnien': 'ThanhNien',
   'publicsecurity': 'PublicSecurity',
+  'saigoneer': 'Saigoneer',
 };
 
 const crawlers = {
@@ -19,6 +20,7 @@ const crawlers = {
   'tuoitre': () => require('@/scripts/crawlers/tuoitre')(),
   'thanhnien': () => require('@/scripts/crawlers/thanhnien')(),
   'publicsecurity': () => require('@/scripts/crawlers/publicsecurity')(),
+  'saigoneer': () => require('@/scripts/crawlers/saigoneer')(),
 };
 
 export async function POST(request) {
