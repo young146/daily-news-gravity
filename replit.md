@@ -7,7 +7,7 @@ Automated news workflow system for XinChao Vietnam, a 23-year-old Korean-languag
 
 ### Tech Stack
 - **Frontend/Backend**: Next.js 16 (App Router)
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Translation**: OpenAI GPT API
 - **Publishing**: WordPress REST API
 - **Port**: 5000
