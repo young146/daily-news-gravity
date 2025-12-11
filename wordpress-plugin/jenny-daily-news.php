@@ -596,13 +596,12 @@ function jenny_get_styles() {
         }
         .jenny-date {
             font-size: 12px;
-            color: #6b7280;
+            opacity: 0.7;
             margin-bottom: 8px;
         }
         .jenny-title {
             font-size: 18px;
             font-weight: 700;
-            color: #111827;
             margin: 0 0 12px 0;
             line-height: 1.4;
         }
@@ -612,7 +611,7 @@ function jenny_get_styles() {
         }
         .jenny-excerpt {
             font-size: 14px;
-            color: #4b5563;
+            opacity: 0.85;
             line-height: 1.6;
             margin-bottom: 20px;
             flex-grow: 1;
@@ -620,9 +619,9 @@ function jenny_get_styles() {
         .jenny-link {
             font-size: 14px;
             font-weight: 600;
-            color: #4b5563;
             text-decoration: none;
             margin-top: auto;
+            opacity: 0.8;
         }
         .jenny-link:hover {
             color: #ea580c;
