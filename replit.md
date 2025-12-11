@@ -189,6 +189,16 @@ Single publication target on chaovietnam.co.kr:
 
 ## Recent Changes (Dec 11, 2025)
 
+### Jenny Plugin Dark Mode 호환성
+- **Sahifa 다크모드 hover 문제 해결**: `<span class="jenny-link-text">` wrapper 추가
+  - Sahifa 테마의 `a:hover { color: #fff }` 규칙 우회
+  - 카드 배경 흰색 + hover 시 텍스트 안 보이는 문제 해결
+- **카드 스타일 강제 적용**: `!important`로 다크모드에서도 흰 배경 + 어두운 글씨 유지
+  - `.jenny-news-card { background: #ffffff !important; }`
+  - `.jenny-title { color: #111827 !important; }`
+  - `.jenny-excerpt { color: #4b5563 !important; }`
+- **hover 색상**: `.jenny-link:hover .jenny-link-text { color: #ea580c; }` (주황색)
+
 ### Bug Fixes
 - **개별 크롤링 제목 번역 추가**: `crawl-source` API에서 제목 번역 누락 수정
   - SoraNews24, VnExpress 등 영문 소스 → GPT로 제목 한글 번역
