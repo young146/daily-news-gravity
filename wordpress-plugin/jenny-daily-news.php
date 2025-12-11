@@ -630,7 +630,7 @@ function jenny_get_styles() {
             background: transparent !important;
         }
         .jenny-link:hover {
-            color: #ea580c !important;
+            color: #6b7280 !important;
         }
     </style>';
 }
