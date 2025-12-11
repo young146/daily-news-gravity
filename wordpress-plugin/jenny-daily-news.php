@@ -632,5 +632,19 @@ function jenny_get_styles() {
             color: #ea580c !important;
             opacity: 1 !important;
         }
+        /* Sahifa Dark Mode Override */
+        body.dark-skin .jenny-news-card .jenny-link,
+        body.dark-skin .jenny-news-card .jenny-link:hover,
+        body.dark-skin .jenny-news-card .jenny-link:focus,
+        .dark-skin .jenny-link,
+        .dark-skin .jenny-link:hover {
+            color: #4b5563 !important;
+            opacity: 1 !important;
+        }
+        body.dark-skin .jenny-news-card .jenny-link:hover,
+        .dark-skin .jenny-link:hover {
+            color: #ea580c !important;
+            opacity: 1 !important;
+        }
     </style>';
 }
