@@ -355,7 +355,7 @@ function jenny_daily_news_shortcode( $atts ) {
         $output .= '<div class="jenny-date">' . get_the_date( 'Y.m.d H:i', $sorted_post['post_id'] ) . '</div>';
         $output .= '<h3 class="jenny-title"><a href="' . esc_url( $link_url ) . '">' . get_the_title( $sorted_post['post_id'] ) . '</a></h3>';
         $output .= '<div class="jenny-excerpt">' . $excerpt . '</div>';
-        $output .= '<a href="' . esc_url( $link_url ) . '" class="jenny-link">자세히 보기 →</a>';
+        $output .= '<a href="' . esc_url( $link_url ) . '" class="jenny-link"><span class="jenny-link-text">자세히 보기 →</span></a>';
         $output .= '</div>';
         $output .= '</div>';
     }
@@ -629,10 +629,11 @@ function jenny_get_styles() {
             margin-top: auto;
             background: transparent !important;
         }
-        .jenny-link:hover {
-            color: #6b7280 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+        .jenny-link-text {
+            color: #4b5563;
+        }
+        .jenny-link:hover .jenny-link-text {
+            color: #6b7280;
         }
     </style>';
 }
