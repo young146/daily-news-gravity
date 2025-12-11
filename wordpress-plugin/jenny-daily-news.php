@@ -617,15 +617,20 @@ function jenny_get_styles() {
             margin-bottom: 20px;
             flex-grow: 1;
         }
-        .jenny-link {
+        .jenny-link,
+        .jenny-news-card .jenny-link {
             font-size: 14px;
             font-weight: 600;
             color: #4b5563 !important;
-            text-decoration: none;
+            text-decoration: none !important;
             margin-top: auto;
+            background: transparent !important;
         }
-        .jenny-link:hover {
+        .jenny-link:hover,
+        .jenny-news-card .jenny-link:hover,
+        a.jenny-link:hover {
             color: #ea580c !important;
+            opacity: 1 !important;
         }
     </style>';
 }
